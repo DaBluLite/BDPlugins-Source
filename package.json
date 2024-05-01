@@ -1,0 +1,16 @@
+{
+  "name": "discord-colorways-bd",
+  "module": "index.ts",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bundlebd": "^4.0.0"
+  },
+  "scripts": {
+    "build": "bundlebd --module-comments false --plugin DiscordColorways && bundlebd --module-comments false --plugin CSSUtils && bundlebd --module-comments false --plugin BDToolbox",
+    "build:dc": "bundlebd --module-comments false --plugin DiscordColorways"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
