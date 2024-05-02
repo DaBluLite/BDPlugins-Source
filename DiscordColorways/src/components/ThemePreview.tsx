@@ -1,5 +1,5 @@
 import { CloseIcon } from "./Icons";
-import { Modals, Text } from "../common";
+import { Modals, Text } from "../../../common";
 
 import { HexToHSL } from "../utils";
 import type { ModalProps } from "../../../global";

@@ -1,9 +1,8 @@
 import { Data } from "betterdiscord";
 import type { ModalProps } from "../../../global";
-import { Button, Forms, Modals, ScrollerThin, Text } from "../common";
 import { getAutoPresets } from "../css";
 import { useState } from "react";
-import { radioBar, radioBarItem, radioBarItemFilled, radioPositionLeft } from "../../../common";
+import { radioBar, radioBarItem, radioBarItemFilled, radioPositionLeft, Button, Forms, Modals, Text } from "../../../common";
 
 
 export default function({ modalProps, onChange }: { modalProps: ModalProps, onChange: (autoPresetId: string) => void }) {

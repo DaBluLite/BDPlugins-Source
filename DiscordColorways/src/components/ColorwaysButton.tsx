@@ -1,4 +1,4 @@
-import { FluxDispatcher, Modals, Text, Tooltip } from "../common";
+import { FluxDispatcher, Modals, Text, Tooltip } from "../../../common";
 import { useState } from "react";
 import { Data } from "betterdiscord";
 import Selector from "./Selector";

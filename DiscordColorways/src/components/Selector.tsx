@@ -1,14 +1,12 @@
-import { ColorwayCSS, colorToHex } from "../../../common";
+import { ColorwayCSS, colorToHex, proxyLazy, Button, ButtonLooks, Flex, Forms, Menu, Modals, Popout, ScrollerThin, Select, SettingsRouter, SettingsTab, TextInput, Tooltip } from "../../../common";
 import { defaultColorwaySource, fallbackColorways } from "../constants";
 import { generateCss, getAutoPresets, gradientBase } from "../css";
 import type { Colorway, ModalProps } from "../../../global";
-import { proxyLazy } from "../utils";
 import ColorPickerModal from "./ColorPicker";
 import CreatorModal from "./CreatorModal";
 import ColorwayInfoModal from "./InfoModal";
 import { useCallback, useEffect, useState } from "react";
 import { Data, Webpack } from "betterdiscord";
-import { Button, ButtonLooks, Flex, Forms, Menu, Modals, Popout, ScrollerThin, Select, SettingsRouter, SettingsTab, TextInput, Tooltip } from "../common";
 import { CloseIcon } from "./Icons";
 import AutoColorwaySelector from "./AutoColorwaySelector";
 

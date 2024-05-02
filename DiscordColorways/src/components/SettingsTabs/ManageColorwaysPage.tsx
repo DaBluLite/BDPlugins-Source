@@ -1,9 +1,8 @@
 import { Data } from "betterdiscord";
-import { Button, Card, Flex, Forms, SettingsTab, Text } from "../../common";
 import { type Colorway } from "../../../../global";
 import { defaultColorwaySource } from "../../constants";
 import { generateCss } from "../../css";
-import { DiscordNative, colorToHex } from "../../../../common";
+import { DiscordNative, colorToHex, Button, Card, Flex, Forms, SettingsTab, Text } from "../../../../common";
 
 export default function () {
     return <SettingsTab title="Manage Colorways">
@@ -31,7 +30,7 @@ export default function () {
                         const file = data.file;
                         if (file) {
                             try {
-                                Data.save("custom_colorways", JSON.parse(new TextDecoder().decode(file.data)));
+                                Data.save("custom_colorways", JSON.parse(new TextDecoder().decode(file.data)).colorways);
                             } catch (err) {
                                 throw new Error(`(DiscordColorways) ${err}`);
                             }
@@ -41,7 +40,7 @@ export default function () {
                 </Button>
                 <Button
                     size={Button.Sizes.SMALL}
-                    onClick={() => DiscordNative.fileManager.saveWithDialog(JSON.stringify(Data.load("custom_colorways") as string), "colorways.json")}>
+                    onClick={() => DiscordNative.fileManager.saveWithDialog(JSON.stringify({ "colorways": Data.load("custom_colorways") as string }), "colorways.json")}>
                     Export Colorways
                 </Button>
             </Flex>

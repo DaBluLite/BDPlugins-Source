@@ -1,4 +1,3 @@
-import { Forms, Modals, TextInput, Text, ScrollerThin, Switch, Button, UserStore, ColorPicker, Flex } from "../common";
 import { useState, useEffect } from "react";
 import { fallbackColorways, knownThemeVars } from "../constants";
 import { generateCss, getPreset, gradientPresetIds, pureGradientBase } from "../css";
@@ -7,7 +6,7 @@ import { getHex, hexToString } from "../utils";
 import ConflictingColorsModal from "./ConflictingColorsModal";
 import ThemePreviewCategory from "./ThemePreview";
 import { Data } from "betterdiscord";
-import { colorToHex } from "../../../common";
+import { colorToHex, Forms, Modals, TextInput, Text, Button, UserStore, ColorPicker } from "../../../common";
 import InputColorwayIdModal from "./InputColorwayIdModal";
 import ColorwayCreatorSettingsModal from "./ColorwayCreatorSettingsModal";
 export default function ({

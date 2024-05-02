@@ -1,4 +1,4 @@
-import { Button, Forms, ScrollerThin, Text, Modals } from "../common";
+import { Button, Forms, ScrollerThin, Text, Modals } from "../../../common";
 import { useState } from "react";
 
 import { knownThemeVars } from "../constants";

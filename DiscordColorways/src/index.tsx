@@ -1,12 +1,11 @@
 import { Patcher, Data, DOM } from "betterdiscord";
 import { hookFunctionComponent, getFiber, findOwner, queryTree, ColorwayCSS, Webpack, colorToHex } from "../../common";
 import ColorwaysButton from "./components/ColorwaysButton";
-import { Filters } from "../../common";
 import styles from "./style.css";
 import SettingsPage from "./components/SettingsTabs/SettingsPage";
 import OnDemandPage from "./components/SettingsTabs/OnDemandPage";
 import ManageColorwaysPage from "./components/SettingsTabs/ManageColorwaysPage";
-import { Forms, Modals, SettingsRouter } from "./common";
+import { Forms, Modals, SettingsRouter, Filters } from "../../common";
 import CreatorModal from "./components/CreatorModal";
 import Selector from "./components/Selector";
 import ColorPicker from "./components/ColorPicker";
@@ -121,6 +120,8 @@ const SettingsSection = [
         section: "DIVIDER"
     }
 ].filter(Boolean);
+
+console.log(Webpack.getModule(Filters.bySource("Messages.REMOVE_ATTACHMENT_BODY")));
 
 export default class DiscordColorways {
     load() { }

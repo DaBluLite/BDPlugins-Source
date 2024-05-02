@@ -1,6 +1,6 @@
 import { Data } from "betterdiscord";
 import { useState } from "react";
-import { SettingsTab, Switch } from "../../common";
+import { SettingsTab, Switch } from "../../../../common";
 
 export default function () {
     const [onDemand, setOnDemand] = useState<boolean>(Data.load("settings").onDemandWays);

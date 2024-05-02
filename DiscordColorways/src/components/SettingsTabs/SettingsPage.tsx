@@ -2,10 +2,9 @@ import { defaultColorwaySource, fallbackColorways, knownColorwaySources } from "
 import type { Colorway, FluxEvents } from "../../../../global";
 import { useState, useEffect } from "react";
 import { Data } from "betterdiscord";
-import { Button, Flex, FluxDispatcher, Forms, Modals, SettingsTab, Switch, Text, TextInput, Clipboard, Link, ScrollerThin } from "../../common";
 import { CloseIcon, CopyIcon } from "../Icons";
 import plugin from "../../plugin.json"
-import { radioBarItem, radioBarItemFilled } from "../../../../common";
+import { radioBarItem, radioBarItemFilled, Button, Flex, FluxDispatcher, Forms, Modals, SettingsTab, Switch, Text, TextInput, Clipboard, Link, ScrollerThin } from "../../../../common";
 
 export default function () {
     const [colorways, setColorways] = useState<Colorway[]>([]);

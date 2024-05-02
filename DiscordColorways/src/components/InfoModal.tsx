@@ -1,12 +1,12 @@
-import { Button, Clipboard, Forms, Text, Toasts, Modals, openUserProfile, Flex } from "../common";
-
-import { ColorwayCSS, colorToHex } from "../../../common";
+import { ColorwayCSS, colorToHex, findComponentByCodeLazy, useStateFromStores, Button, Clipboard, Forms, Text, Toasts, Modals, Flex, UserStore } from "../../../common";
 import { generateCss, pureGradientBase } from "../css";
 import type { Colorway } from "../../../global";
 import ThemePreviewCategory from "./ThemePreview";
 import { Data } from "betterdiscord";
 import { useState } from "react";
 import { stringToHex } from "../utils";
+
+const UserSummaryItem = findComponentByCodeLazy("defaultRenderUser", "showDefaultAvatarsForNullUsers");
 
 export default function ({
     modalProps,
@@ -26,6 +26,7 @@ export default function ({
         "tertiary",
     ];
     const [collapsedCSS, setCollapsedCSS] = useState(true);
+    const profile = useStateFromStores([UserStore], () => UserStore.getUser(colorwayProps.authorID));
     return <Modals.ModalRoot {...modalProps} className="colorwayCreator-modal">
         <Modals.ModalHeader>
             <Text variant="heading-lg/semibold" tag="h1">
@@ -58,17 +59,14 @@ export default function ({
                 <div className="colorwayInfo-row colorwayInfo-author">
                     <Flex style={{ gap: "10px", width: "100%", alignItems: "center" }}>
                         <Forms.FormTitle style={{ marginBottom: 0, width: "100%" }}>Properties:</Forms.FormTitle>
-                        <Button
-                            color={Button.Colors.PRIMARY}
-                            size={Button.Sizes.MEDIUM}
-                            look={Button.Looks.OUTLINED}
-                            style={{ flex: "0 0 auto", maxWidth: "236px" }}
-                            onClick={() => {
-                                openUserProfile(colorwayProps.authorID);
-                            }}
-                        >
-                            Author: {colorwayProps.author}
-                        </Button>
+                        <UserSummaryItem
+                            users={[profile]}
+                            guildId={undefined}
+                            renderIcon={false}
+                            showDefaultAvatarsForNullUsers
+                            size={32}
+                            showUserPopout
+                        />
                         <Button
                             color={Button.Colors.PRIMARY}
                             size={Button.Sizes.MEDIUM}

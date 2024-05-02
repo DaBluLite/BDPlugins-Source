@@ -1,4 +1,4 @@
-import { Button, Flex, Modals, ScrollerThin, TextInput, Toasts, Clipboard } from "../common";
+import { Button, Flex, Modals, ScrollerThin, TextInput, Toasts, Clipboard } from "../../../common";
 import { colorVariables } from "../css";
 import React, { useState } from "react";
 import { CopyIcon } from "./Icons";

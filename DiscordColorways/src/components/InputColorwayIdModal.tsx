@@ -1,5 +1,5 @@
 import type { ModalProps } from "../../../global";
-import { Button, Forms, Modals, TextInput } from "../common";
+import { Button, Forms, Modals, TextInput } from "../../../common";
 import { useState } from "react";
 import { hexToString } from "../utils";
 
