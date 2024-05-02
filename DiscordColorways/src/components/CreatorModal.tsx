@@ -152,12 +152,10 @@ export default function ({
                     </svg>
                 </div>
                 <ThemePreviewCategory
-                    isCollapsed={false}
                     accent={"#" + accentColor}
                     primary={"#" + primaryColor}
                     secondary={"#" + secondaryColor}
                     tertiary={"#" + tertiaryColor}
-                    noContainer
                     previewCSS={gradientPresetIds.includes(getPreset()[preset].id) ? pureGradientBase + `.colorwaysPreview-modal,.colorwaysPreview-wrapper {--gradient-theme-bg: linear-gradient(${(getPreset(
                         primaryColor,
                         secondaryColor,

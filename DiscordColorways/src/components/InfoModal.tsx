@@ -182,13 +182,10 @@ export default function ({
                     </Text>
                 </div>
                 <ThemePreviewCategory
-                    isCollapsed={true}
-                    className="colorwayInfo-lastCat"
                     accent={colorwayProps.accent}
                     primary={colorwayProps.primary}
                     secondary={colorwayProps.secondary}
                     tertiary={colorwayProps.tertiary}
-                    noContainer
                     previewCSS={colorwayProps.isGradient ? pureGradientBase + `.colorwaysPreview-modal,.colorwaysPreview-wrapper {--gradient-theme-bg: linear-gradient(${colorwayProps.linearGradient})}` : ""}
                 />
                 <div style={{ width: "100%", height: "20px" }} />

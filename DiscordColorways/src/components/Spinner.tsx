@@ -1,4 +1,4 @@
-export default function ({ className, children }: { className?: string, children?: React.ReactElement | React.ReactElement[]; }) {
+export default function ({ className }: { className?: string; }) {
     return <div className={"colorwaysBtn-spinner" + (className ? " " + className : "")} role="img" aria-label="Loading">
         <div className="colorwaysBtn-spinnerInner">
             <svg className="colorwaysBtn-spinnerCircular" viewBox="25 25 50 50" fill="currentColor">

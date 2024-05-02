@@ -1,17 +1,19 @@
 import { Patcher, Data, DOM } from "betterdiscord";
-import { hookFunctionComponent, getFiber, findOwner, queryTree, ColorwayCSS, Webpack } from "../../common";
+import { hookFunctionComponent, getFiber, findOwner, queryTree, ColorwayCSS, Webpack, colorToHex } from "../../common";
 import ColorwaysButton from "./components/ColorwaysButton";
 import { Filters } from "../../common";
 import styles from "./style.css";
 import SettingsPage from "./components/SettingsTabs/SettingsPage";
 import OnDemandPage from "./components/SettingsTabs/OnDemandPage";
 import ManageColorwaysPage from "./components/SettingsTabs/ManageColorwaysPage";
-import { Flex, Forms, Modals, SettingsRouter, Switch, Text } from "./common";
+import { Forms, Modals, SettingsRouter } from "./common";
 import CreatorModal from "./components/CreatorModal";
 import Selector from "./components/Selector";
 import ColorPicker from "./components/ColorPicker";
 import type { ModalProps } from "../../global";
 import plugin from "./plugin.json"
+import AutoColorwaySelector from "./components/AutoColorwaySelector";
+import { getAutoPresets } from "./css";
 
 const guildStyles = Webpack.getModule(Filters.byKeys("guilds", "base"), { searchExports: false, defaultExport: true });
 const treeStyles = Webpack.getModule(Filters.byKeys("tree", "scroller"), { searchExports: false, defaultExport: true });
@@ -166,7 +168,16 @@ export default class DiscordColorways {
             "Open Color Stealer": () => Modals.openModal((props: ModalProps) => <ColorPicker modalProps={props} />),
             "Open Settings": () => SettingsRouter.open("ColorwaysSettings"),
             "Open On-Demand Settings": () => SettingsRouter.open("ColorwaysOnDemand"),
-            "Manage Colorways...": () => SettingsRouter.open("ColorwaysManagement")
+            "Manage Colorways...": () => SettingsRouter.open("ColorwaysManagement"),
+            "Change Auto Colorway Preset": async () => {
+                Modals.openModal((props: ModalProps) => <AutoColorwaySelector modalProps={props} onChange={autoPresetId => {
+                    if (Data.load("settings").activeColorwayID === "Auto") {
+                        const demandedColorway = getAutoPresets(colorToHex(getComputedStyle(document.body).getPropertyValue("--os-accent-color")))[autoPresetId].preset();
+                        Data.save("settings", { ...Data.load("settings"), activeColorway: demandedColorway });
+                        ColorwayCSS.set(demandedColorway);
+                    }
+                }} />);
+            }
         }
     };
     stop() {

@@ -15,15 +15,8 @@ export default function () {
 
     useEffect(() => {
         (async function() {
-            const responses: Response[] = await Promise.all(
-                Data.load("settings").colorwayLists.map((url: string) =>
-                    fetch(url)
-                )
-            );
-            const data = await Promise.all(
-                responses.map((res: Response) =>
-                    res.json().catch(() => { return { colorways: [] }; })
-                ));
+            const responses: Response[] = await Promise.all(Data.load("settings").colorwayLists.map((url: string) => fetch(url)));
+            const data = await Promise.all(responses.map((res: Response) => res.json().catch(() => { return { colorways: [] }; })));
             const colorways = data.flatMap(json => json.colorways);
             setColorways(colorways || fallbackColorways);
         })()
