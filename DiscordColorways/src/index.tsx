@@ -1,18 +1,16 @@
 import { Patcher, Data, DOM } from "betterdiscord";
-import { hookFunctionComponent, getFiber, findOwner, queryTree, ColorwayCSS, Webpack, colorToHex } from "../../common";
+import { hookFunctionComponent, getFiber, findOwner, queryTree, ColorwayCSS, Webpack, colorToHex, openModal, getSetting, saveSettings, ModalRoot, ModalContent, ModalHeader } from "../../common";
 import ColorwaysButton from "./components/ColorwaysButton";
 import styles from "./style.css";
-import SettingsPage from "./components/SettingsTabs/SettingsPage";
-import OnDemandPage from "./components/SettingsTabs/OnDemandPage";
-import ManageColorwaysPage from "./components/SettingsTabs/ManageColorwaysPage";
-import { Forms, Modals, SettingsRouter, Filters } from "../../common";
+import { Text, Filters } from "../../common";
 import CreatorModal from "./components/CreatorModal";
 import Selector from "./components/Selector";
 import ColorPicker from "./components/ColorPicker";
-import type { ModalProps } from "../../global";
-import plugin from "./plugin.json"
 import AutoColorwaySelector from "./components/AutoColorwaySelector";
 import { getAutoPresets } from "./css";
+import { defaultColorwaySource } from "./constants";
+import SettingsModal, { SettingsTab } from "./components/SettingsModal";
+import ReactDOM from "react-dom";
 
 const guildStyles = Webpack.getModule(Filters.byKeys("guilds", "base"), { searchExports: false, defaultExport: true });
 const treeStyles = Webpack.getModule(Filters.byKeys("tree", "scroller"), { searchExports: false, defaultExport: true });
@@ -57,71 +55,40 @@ const triggerRerender = async () => {
 Data.save("settings", Object.assign(
     {},
     {
-        activeColorway: null,
-        activeColorwayID: null,
         activeAutoPreset: null,
         showInGuildBar: false,
-        colorwayLists: ["https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json"],
         onDemandWays: false,
         onDemandWaysTintedText: false,
         onDemandWaysDiscordSaturation: false,
         onDemandWaysOsAccentColor: false,
-        isButtonThin: false
+        isButtonThin: false,
+        activeColorwayObject: { id: null, css: null, sourceType: null, source: null },
+        selectorViewMode: "grid",
+        showLabelsInSelectorGridView: false
     },
     Data.load("settings")
 ));
 
-Data.save("custom_colorways", Object.assign([], Data.load("custom_colorways")));
-
-const SettingsSection = [
-    {
-        section: "CUSTOM",
-        className: "vc-settings-header",
-        element: () => <Forms.FormTitle style={{
-            marginBottom: 0,
-            padding: "6px 10px",
-            color: "var(--channels-default)",
-            display: "flex",
-            justifyContent: "space-between"
-        }}>
-            Discord Colorways
-            <Forms.FormTitle style={{
-                marginBottom: 0,
-                color: "var(--channels-default)",
-                marginLeft: "auto"
-            }}>v{plugin.version}</Forms.FormTitle>
-        </Forms.FormTitle>
-    },
-    {
-        section: "ColorwaysSelector",
-        label: "Colorways",
-        element: () => <Selector modalProps={{ onClose: () => new Promise(() => {}), transitionState: 1 }} isSettings />,
-        className: "dc-colorway-selector"
-    },
-    {
-        section: "ColorwaysSettings",
-        label: "Settings",
-        element: SettingsPage,
-        className: "dc-colorway-settings"
-    },
-    {
-        section: "ColorwaysOnDemand",
-        label: "On-Demand",
-        element: OnDemandPage,
-        className: "dc-colorway-ondemand"
-    },
-    {
-        section: "ColorwaysManagement",
-        label: "Manage...",
-        element: ManageColorwaysPage,
-        className: "dc-colorway-management"
-    },
-    {
-        section: "DIVIDER"
+if (getSetting("colorwayLists")) {
+    if (typeof getSetting("colorwayLists")[0] === "string") {
+        saveSettings({ colorwayLists: getSetting("colorwayLists").map((sourceURL: string, i: number) => {
+            return { name: sourceURL === defaultColorwaySource ? "Project Colorway" : `Source #${i}`, url: sourceURL };
+        }) });
     }
-].filter(Boolean);
+} else {
+    saveSettings({ colorwayLists: [{
+        name: "Project Colorway",
+        url: defaultColorwaySource
+    }] })
+}
 
-console.log(Webpack.getModule(Filters.bySource("Messages.REMOVE_ATTACHMENT_BODY")));
+if (Data.load("custom_colorways")) {
+    if (!Data.load("custom_colorways")[0].colorways) {
+        Data.save("custom_colorways", [{ name: "Custom", colorways: Data.load("custom_colorways") }]);
+    }
+} else {
+    Data.save("custom_colorways", []);
+}
 
 export default class DiscordColorways {
     load() { }
@@ -150,37 +117,63 @@ export default class DiscordColorways {
         );
         DOM.addStyle(styles);
         triggerRerender();
-        ColorwayCSS.set(Data.load("settings").activeColorway);
-
-        Webpack.waitForModule(Filters.byStrings("Messages.ACTIVITY_SETTINGS"), { defaultExport: false }).then(SettingsComponent => {
-            Patcher.after(SettingsComponent,
-                "default",
-                (cancel: any, result: any, returnValue: any[]) => {
-                    let location = returnValue.findIndex(s => s.section.toLowerCase() == "appearance") - 1;
-                    returnValue.splice(0, returnValue.length, ...[...[...returnValue].splice(0, location), ...SettingsSection, ...[...returnValue].splice(location, returnValue.length - 1)])
-                }
-            )
-        });
+        ColorwayCSS.set(getSetting("activeColorwayObject").css);
     }
     getToolboxActions() {
         return {
-            "Change Colorway": () => Modals.openModal((props: ModalProps) => <Selector modalProps={props} />),
-            "Open Colorway Creator": () => Modals.openModal((props: ModalProps) => <CreatorModal modalProps={props} />),
-            "Open Color Stealer": () => Modals.openModal((props: ModalProps) => <ColorPicker modalProps={props} />),
-            "Open Settings": () => SettingsRouter.open("ColorwaysSettings"),
-            "Open On-Demand Settings": () => SettingsRouter.open("ColorwaysOnDemand"),
-            "Manage Colorways...": () => SettingsRouter.open("ColorwaysManagement"),
+            "Change Colorway": () => openModal((props: ModalProps) => <Selector modalProps={props} />),
+            "Open Colorway Creator": () => openModal((props: ModalProps) => <CreatorModal modalProps={props} />),
+            "Open Color Stealer": () => openModal((props: ModalProps) => <ColorPicker modalProps={props} />),
+            "Open Settings": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
+                <ModalHeader separator={false}>
+                    <Text variant="heading-lg/semibold" tag="h1">
+                        Settings
+                    </Text>
+                </ModalHeader>
+                <ModalContent><SettingsModal/></ModalContent>
+            </ModalRoot>),
+            "Open On-Demand Settings": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
+                <ModalHeader separator={false}>
+                    <Text variant="heading-lg/semibold" tag="h1">
+                        Settings
+                    </Text>
+                </ModalHeader>
+                <ModalContent><SettingsModal tab={SettingsTab.OnDemand}/></ModalContent>
+            </ModalRoot>),
+            "Manage Colorway Sources": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
+                <ModalHeader separator={false}>
+                    <Text variant="heading-lg/semibold" tag="h1">
+                        Settings
+                    </Text>
+                </ModalHeader>
+                <ModalContent><SettingsModal tab={SettingsTab.Sources}/></ModalContent>
+            </ModalRoot>),
+            "Open Colorway Store": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
+                <ModalHeader separator={false}>
+                    <Text variant="heading-lg/semibold" tag="h1">
+                        Settings
+                    </Text>
+                </ModalHeader>
+                <ModalContent><SettingsModal tab={SettingsTab.Store}/></ModalContent>
+            </ModalRoot>),
             "Change Auto Colorway Preset": async () => {
-                Modals.openModal((props: ModalProps) => <AutoColorwaySelector modalProps={props} onChange={autoPresetId => {
-                    if (Data.load("settings").activeColorwayID === "Auto") {
+                openModal((props: ModalProps) => <AutoColorwaySelector modalProps={props} onChange={autoPresetId => {
+                    if (getSetting("activeColorwayObject").id === "Auto") {
                         const demandedColorway = getAutoPresets(colorToHex(getComputedStyle(document.body).getPropertyValue("--os-accent-color")))[autoPresetId].preset();
-                        Data.save("settings", { ...Data.load("settings"), activeColorway: demandedColorway });
+                        saveSettings({ activeColorwayObject: { id: "Auto", css: demandedColorway, sourceType: "online", source: null } });
                         ColorwayCSS.set(demandedColorway);
                     }
                 }} />);
             }
         }
     };
+    getSettingsPanel() {
+        const elem = document.createElement("div");
+
+        ReactDOM.render(<SettingsModal/>, elem);
+
+        return elem
+    }
     stop() {
         ColorwayCSS.remove();
         DOM.removeStyle();

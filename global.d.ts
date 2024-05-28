@@ -2,27 +2,125 @@
 
 import Constants from "./constants";
 import { FluxEvents } from "./FluxEvents";
-export { FluxEvents }
+{ FluxEvents }
 
 import type { ComponentType, CSSProperties, FunctionComponent, HtmlHTMLAttributes, HTMLProps, KeyboardEvent, MouseEvent, PropsWithChildren, PropsWithRef, ReactNode, Ref } from "react";
 
-export type TextVariant = "heading-sm/normal" | "heading-sm/medium" | "heading-sm/semibold" | "heading-sm/bold" | "heading-md/normal" | "heading-md/medium" | "heading-md/semibold" | "heading-md/bold" | "heading-lg/normal" | "heading-lg/medium" | "heading-lg/semibold" | "heading-lg/bold" | "heading-xl/normal" | "heading-xl/medium" | "heading-xl/bold" | "heading-xxl/normal" | "heading-xxl/medium" | "heading-xxl/bold" | "eyebrow" | "heading-deprecated-14/normal" | "heading-deprecated-14/medium" | "heading-deprecated-14/bold" | "text-xxs/normal" | "text-xxs/medium" | "text-xxs/semibold" | "text-xxs/bold" | "text-xs/normal" | "text-xs/medium" | "text-xs/semibold" | "text-xs/bold" | "text-sm/normal" | "text-sm/medium" | "text-sm/semibold" | "text-sm/bold" | "text-md/normal" | "text-md/medium" | "text-md/semibold" | "text-md/bold" | "text-lg/normal" | "text-lg/medium" | "text-lg/semibold" | "text-lg/bold" | "display-sm" | "display-md" | "display-lg" | "code";
-export type FormTextTypes = Record<"DEFAULT" | "INPUT_PLACEHOLDER" | "DESCRIPTION" | "LABEL_BOLD" | "LABEL_SELECTED" | "LABEL_DESCRIPTOR" | "ERROR" | "SUCCESS", string>;
-export type Heading = `h${1 | 2 | 3 | 4 | 5 | 6}`;
-export type GenericStore = t.FluxStore & Record<string, any>;
-export type Margins = Record<"marginTop16" | "marginTop8" | "marginBottom8" | "marginTop20" | "marginBottom20", string>;
-export type ButtonLooks = Record<"FILLED" | "INVERTED" | "OUTLINED" | "LINK" | "BLANK", string>;
+declare global {
+    type TextVariant = "heading-sm/normal" | "heading-sm/medium" | "heading-sm/semibold" | "heading-sm/bold" | "heading-md/normal" | "heading-md/medium" | "heading-md/semibold" | "heading-md/bold" | "heading-lg/normal" | "heading-lg/medium" | "heading-lg/semibold" | "heading-lg/bold" | "heading-xl/normal" | "heading-xl/medium" | "heading-xl/bold" | "heading-xxl/normal" | "heading-xxl/medium" | "heading-xxl/bold" | "eyebrow" | "heading-deprecated-14/normal" | "heading-deprecated-14/medium" | "heading-deprecated-14/bold" | "text-xxs/normal" | "text-xxs/medium" | "text-xxs/semibold" | "text-xxs/bold" | "text-xs/normal" | "text-xs/medium" | "text-xs/semibold" | "text-xs/bold" | "text-sm/normal" | "text-sm/medium" | "text-sm/semibold" | "text-sm/bold" | "text-md/normal" | "text-md/medium" | "text-md/semibold" | "text-md/bold" | "text-lg/normal" | "text-lg/medium" | "text-lg/semibold" | "text-lg/bold" | "display-sm" | "display-md" | "display-lg" | "code";
+type FormTextTypes = Record<"DEFAULT" | "INPUT_PLACEHOLDER" | "DESCRIPTION" | "LABEL_BOLD" | "LABEL_SELECTED" | "LABEL_DESCRIPTOR" | "ERROR" | "SUCCESS", string>;
+type Heading = `h${1 | 2 | 3 | 4 | 5 | 6}`;
+type GenericStore = t.FluxStore & Record<string, any>;
+type Margins = Record<"marginTop16" | "marginTop8" | "marginBottom8" | "marginTop20" | "marginBottom20", string>;
+type ButtonLooks = Record<"FILLED" | "INVERTED" | "OUTLINED" | "LINK" | "BLANK", string>;
 
-export type TextProps = PropsWithChildren<HtmlHTMLAttributes<HTMLDivElement> & {
+type TextProps = PropsWithChildren<HtmlHTMLAttributes<HTMLDivElement> & {
     variant?: TextVariant;
     tag?: "div" | "span" | "p" | "strong" | Heading;
     selectable?: boolean;
     lineClamp?: number;
 }>;
 
-export type Text = ComponentType<TextProps>;
+type TextComponent = ComponentType<TextProps>;
 
-export type FormTitle = ComponentType<HTMLProps<HTMLTitleElement> & PropsWithChildren<{
+type CallbackFn = (mod: any, id: string) => void;
+
+type Ref<T> = RefCallback<T> | RefObject<T> | null;
+
+type RenderFunction = (props: ModalProps) => ReactNode;
+
+interface OfflineSourceObject {
+    name: string,
+    colorways: Colorway[],
+    id?: string
+}
+interface ColorwayObject {
+    id: string | null,
+    css: string | null,
+    sourceType: "online" | "offline" | "temporary" | null,
+    source: string | null | undefined;
+}
+
+interface SourceObject {
+    type: "online" | "offline" | "temporary",
+    source: string,
+    colorways: Colorway[];
+}
+
+type RC<C> = ComponentType<PropsWithChildren<C & Record<string, any>>>;
+
+interface Menu {
+    Menu: RC<{
+        navId: string;
+        onClose(): void;
+        className?: string;
+        style?: CSSProperties;
+        hideScroller?: boolean;
+        onSelect?(): void;
+    }>;
+    MenuSeparator: ComponentType;
+    MenuGroup: RC<{
+        label?: string;
+    }>;
+    MenuItem: RC<{
+        id: string;
+        label: ReactNode;
+        action?(e: MouseEvent): void;
+        icon?: ComponentType<any>;
+
+        color?: string;
+        render?: ComponentType<any>;
+        onChildrenScroll?: Function;
+        childRowHeight?: number;
+        listClassName?: string;
+        disabled?: boolean;
+    }>;
+    MenuCheckboxItem: RC<{
+        id: string;
+        label: string;
+        checked: boolean;
+        action?(e: MouseEvent): void;
+        disabled?: boolean;
+    }>;
+    MenuRadioItem: RC<{
+        id: string;
+        group: string;
+        label: string;
+        checked: boolean;
+        action?(e: MouseEvent): void;
+        disabled?: boolean;
+    }>;
+    MenuControlItem: RC<{
+        id: string;
+        interactive?: boolean;
+    }>;
+    MenuSliderControl: RC<{
+        minValue: number,
+        maxValue: number,
+        value: number,
+        onChange(value: number): void,
+        renderValue?(value: number): string,
+    }>;
+}
+
+interface StoreObject {
+    sources: StoreItem[];
+}
+interface ModalOptions {
+    modalKey?: string;
+    onCloseRequest?: (() => void);
+    onCloseCallback?: (() => void);
+}
+
+interface StoreItem {
+    name: string,
+    id: string,
+    description: string,
+    url: string,
+    authorGh: string;
+}
+
+type FormTitle = ComponentType<HTMLProps<HTMLTitleElement> & PropsWithChildren<{
     /** is h5 */
     tag?: Heading;
     faded?: boolean;
@@ -31,7 +129,7 @@ export type FormTitle = ComponentType<HTMLProps<HTMLTitleElement> & PropsWithChi
     error?: ReactNode;
 }>>;
 
-export type FormSection = ComponentType<PropsWithChildren<{
+type FormSection = ComponentType<PropsWithChildren<{
     /** is h5 */
     tag?: Heading;
     className?: string;
@@ -42,20 +140,20 @@ export type FormSection = ComponentType<PropsWithChildren<{
     htmlFor?: unknown;
 }>>;
 
-export type FormDivider = ComponentType<{
+type FormDivider = ComponentType<{
     className?: string;
     style?: CSSProperties;
 }>;
 
 
-export type FormText = ComponentType<PropsWithChildren<{
+type FormText = ComponentType<PropsWithChildren<{
     disabled?: boolean;
     selectable?: boolean;
     /** defaults to FormText.Types.DEFAULT */
     type?: string;
 }> & TextProps> & { Types: FormTextTypes; };
 
-export type Tooltip = ComponentType<{
+type Tooltip = ComponentType<{
     text: ReactNode;
     children: FunctionComponent<{
         onClick(): void;
@@ -86,9 +184,9 @@ export type Tooltip = ComponentType<{
     Colors: Record<"BLACK" | "BRAND" | "CUSTOM" | "GREEN" | "GREY" | "PRIMARY" | "RED" | "YELLOW", string>;
 };
 
-export type TooltipPositions = Record<"BOTTOM" | "CENTER" | "LEFT" | "RIGHT" | "TOP" | "WINDOW_CENTER", string>;
+type TooltipPositions = Record<"BOTTOM" | "CENTER" | "LEFT" | "RIGHT" | "TOP" | "WINDOW_CENTER", string>;
 
-export type Card = ComponentType<PropsWithChildren<HTMLProps<HTMLDivElement> & {
+type Card = ComponentType<PropsWithChildren<HTMLProps<HTMLDivElement> & {
     editable?: boolean;
     outline?: boolean;
     /** Card.Types.PRIMARY */
@@ -97,7 +195,7 @@ export type Card = ComponentType<PropsWithChildren<HTMLProps<HTMLDivElement> & {
     Types: Record<"BRAND" | "CUSTOM" | "DANGER" | "PRIMARY" | "SUCCESS" | "WARNING", string>;
 };
 
-export type Button = ComponentType<PropsWithChildren<Omit<HTMLProps<HTMLButtonElement>, "size"> & {
+type Button = ComponentType<PropsWithChildren<Omit<HTMLProps<HTMLButtonElement>, "size"> & {
     /** Button.Looks.FILLED */
     look?: string;
     /** Button.Colors.BRAND */
@@ -127,7 +225,7 @@ export type Button = ComponentType<PropsWithChildren<Omit<HTMLProps<HTMLButtonEl
     Link: any;
 };
 
-export type Switch = ComponentType<PropsWithChildren<{
+type Switch = ComponentType<PropsWithChildren<{
     value: boolean;
     onChange(value: boolean): void;
 
@@ -140,7 +238,7 @@ export type Switch = ComponentType<PropsWithChildren<{
     tooltipNote?: ReactNode;
 }>>;
 
-export type Timestamp = ComponentType<PropsWithChildren<{
+type Timestamp = ComponentType<PropsWithChildren<{
     timestamp: Date;
     isEdited?: boolean;
 
@@ -153,7 +251,7 @@ export type Timestamp = ComponentType<PropsWithChildren<{
     isVisibleOnlyOnHover?: boolean;
 }>>;
 
-export type TextInput = ComponentType<PropsWithChildren<{
+type TextInput = ComponentType<PropsWithChildren<{
     name?: string;
     onChange?(value: string, name?: string): void;
     placeholder?: string;
@@ -174,7 +272,7 @@ export type TextInput = ComponentType<PropsWithChildren<{
     Sizes: Record<"DEFAULT" | "MINI", string>;
 };
 
-export type TextArea = ComponentType<PropsWithRef<Omit<HTMLProps<HTMLTextAreaElement>, "onChange"> & {
+type TextArea = ComponentType<PropsWithRef<Omit<HTMLProps<HTMLTextAreaElement>, "onChange"> & {
     onChange(v: string): void;
 }>>;
 
@@ -186,7 +284,7 @@ interface SelectOption {
     default?: boolean;
 }
 
-export type Select = ComponentType<PropsWithChildren<{
+type Select = ComponentType<PropsWithChildren<{
     placeholder?: string;
     options: ReadonlyArray<SelectOption>; // TODO
 
@@ -225,7 +323,7 @@ export type Select = ComponentType<PropsWithChildren<{
     "aria-labelledby"?: boolean;
 }>>;
 
-export type SearchableSelect = ComponentType<PropsWithChildren<{
+type SearchableSelect = ComponentType<PropsWithChildren<{
     placeholder?: string;
     options: ReadonlyArray<SelectOption>; // TODO
     value?: SelectOption;
@@ -268,7 +366,7 @@ export type SearchableSelect = ComponentType<PropsWithChildren<{
     "aria-labelledby"?: boolean;
 }>>;
 
-export type Slider = ComponentType<PropsWithChildren<{
+type Slider = ComponentType<PropsWithChildren<{
     initialValue: number;
     defaultValue?: number;
     keyboardStep?: number;
@@ -307,7 +405,7 @@ export type Slider = ComponentType<PropsWithChildren<{
 }>>;
 
 // TODO - type maybe idk probably not that useful other than the constants
-export type Flex = ComponentType<PropsWithChildren<any>> & {
+type Flex = ComponentType<PropsWithChildren<any>> & {
     Align: Record<"START" | "END" | "CENTER" | "STRETCH" | "BASELINE", string>;
     Direction: Record<"VERTICAL" | "HORIZONTAL" | "HORIZONTAL_REVERSE", string>;
     Justify: Record<"START" | "END" | "CENTER" | "BETWEEN" | "AROUND", string>;
@@ -321,7 +419,7 @@ declare enum PopoutAnimation {
     FADE = "4"
 }
 
-export type Popout = ComponentType<{
+type Popout = ComponentType<{
     children(
         thing: {
             "aria-controls": string;
@@ -362,7 +460,7 @@ export type Popout = ComponentType<{
     Animation: typeof PopoutAnimation;
 };
 
-export type Dialog = ComponentType<PropsWithChildren<any>>;
+type Dialog = ComponentType<PropsWithChildren<any>>;
 
 type Resolve = (data: { theme: "light" | "dark", saturation: number; }) => {
     hex(): string;
@@ -371,12 +469,12 @@ type Resolve = (data: { theme: "light" | "dark", saturation: number; }) => {
     spring(): string;
 };
 
-export type useToken = (color: {
+type useToken = (color: {
     css: string;
     resolve: Resolve;
 }) => ReturnType<Resolve>;
 
-export type Paginator = ComponentType<{
+type Paginator = ComponentType<{
     currentPage: number;
     maxVisiblePages: number;
     pageSize: number;
@@ -386,7 +484,7 @@ export type Paginator = ComponentType<{
     hideMaxPage?: boolean;
 }>;
 
-export type MaskedLink = ComponentType<PropsWithChildren<{
+type MaskedLink = ComponentType<PropsWithChildren<{
     href: string;
     rel?: string;
     target?: string;
@@ -399,7 +497,7 @@ export type MaskedLink = ComponentType<PropsWithChildren<{
     channelId?: string;
 }>>;
 
-export type ScrollerThin = ComponentType<PropsWithChildren<{
+type ScrollerThin = ComponentType<PropsWithChildren<{
     className?: string;
     style?: CSSProperties;
 
@@ -412,7 +510,7 @@ export type ScrollerThin = ComponentType<PropsWithChildren<{
     onScroll?(): void;
 }>>;
 
-export type Clickable = ComponentType<PropsWithChildren<{
+type Clickable = ComponentType<PropsWithChildren<{
     className?: string;
 
     href?: string;
@@ -422,7 +520,7 @@ export type Clickable = ComponentType<PropsWithChildren<{
     onKeyPress?(): void;
 }>>;
 
-export type Avatar = ComponentType<PropsWithChildren<{
+type Avatar = ComponentType<PropsWithChildren<{
     className?: string;
 
     src?: string;
@@ -446,12 +544,12 @@ type FocusLock = ComponentType<PropsWithChildren<{
     containerRef: RefObject<HTMLElement>
 }>>;
 
-export interface Clipboard {
+interface Clipboard {
     copy(text: string): void;
     SUPPORTS_COPY: boolean;
 }
 
-export interface Colorway {
+interface Colorway {
     [key: string]: any,
     name: string,
     "dc-import": string,
@@ -469,7 +567,7 @@ export interface Colorway {
     linearGradient?: string;
 }
 
-export interface ColorPickerProps {
+interface ColorPickerProps {
     color: number;
     showEyeDropper: boolean;
     suggestedColors: string[];
@@ -477,7 +575,7 @@ export interface ColorPickerProps {
     onChange(color: number): void;
 }
 
-export class User {
+class User {
     constructor(user: object);
     accentColor: number;
     avatar: string;
@@ -529,7 +627,7 @@ export class User {
     toString(): string;
 }
   
-export interface UserJSON {
+interface UserJSON {
     avatar: string;
     avatarDecoration: unknown | undefined;
     discriminator: string;
@@ -538,7 +636,7 @@ export interface UserJSON {
     username: string;
 }
 
-export class UserStore {
+class UserStore {
     filter(filter: () => boolean, sort?: boolean): Record<string, User>;
     findByTag(username: string, discriminator: string): User;
     forEach(action: Function): void;
@@ -548,7 +646,7 @@ export class UserStore {
     initialize(): void;
 }
 
-export class SelectedChannelStore {
+class SelectedChannelStore {
     getChannelId(e?: unknown): string;
     getLastChannelFollowingDestination(): unknown;
     getLastSelectedChannelId(): string;
@@ -557,7 +655,7 @@ export class SelectedChannelStore {
     initialize(): void;
 }
 
-export class RelationshipStore {
+class RelationshipStore {
     getFriendIDs(): string[];
     /** Related to friend nicknames experiment. */
     getNickname(userId: string): string;
@@ -571,7 +669,7 @@ export class RelationshipStore {
     isFriend(userId: string): boolean;
 }
 
-export class MessageStore {
+class MessageStore {
     getMessage(channelId: string, messageId: string): Message;
     /** @returns This return object is fucking huge; I'll type it later. */
     getMessages(channelId: string): unknown;
@@ -585,7 +683,7 @@ export class MessageStore {
     initialize(): void;
 }
 
-export interface Role {
+interface Role {
     color: number;
     colorString: string | undefined;
     hoist: boolean;
@@ -605,7 +703,7 @@ export interface Role {
     unicodeEmoji: string | undefined;
 }
 
-export class Guild {
+class Guild {
     constructor(guild: object);
     afkChannelId: string | undefined;
     afkTimeout: number;
@@ -660,13 +758,13 @@ export class Guild {
     toString(): string; // override that is identical to Guild.name
 }  
 
-export class GuildStore {
+class GuildStore {
     getGuild(guildId: string): Guild;
     getGuildCount(): number;
     getGuilds(): Record<string, Guild>;
 }
 
-export class GuildMemberStore {
+class GuildMemberStore {
     getAllGuildsAndMembers(): Record<string, Record<string, GuildMember>>;
     /** @returns Format: [guildId-userId: Timestamp (string)] */
     getCommunicationDisabledUserMap(): Record<string, string>;
@@ -683,7 +781,7 @@ export class GuildMemberStore {
     initialize(): void;
 }
 
-export interface GuildMember {
+interface GuildMember {
     avatar: string | undefined;
     banner: string | undefined;
     bio: string;
@@ -701,7 +799,7 @@ export interface GuildMember {
     userId: string;
 }
 
-export class ChannelStore {
+class ChannelStore {
     getAllThreadsForParent(channelId: string): Channel[];
     getChannel(channelId: string): Channel;
     getDMFromUserId(userId: string): string;
@@ -718,7 +816,7 @@ export class ChannelStore {
     initialize(): void;
 }
 
-export class MessageStore {
+class MessageStore {
     getMessage(channelId: string, messageId: string): Message;
     /** @returns This return object is fucking huge; I'll type it later. */
     getMessages(channelId: string): unknown;
@@ -732,7 +830,7 @@ export class MessageStore {
     initialize(): void;
 }
 
-export class Channel {
+class Channel {
     constructor(channel: object);
     application_id: number | undefined;
     bitrate: number;
@@ -816,7 +914,7 @@ export class Channel {
 
 type GenericFunction = (...args: any[]) => any;
 
-export class FluxStore {
+class FluxStore {
     constructor(dispatcher: FluxDispatcher, eventHandlers?: Partial<Record<FluxEvents, (data: any) => void>>);
 
     addChangeListener(callback: () => void): void;
@@ -834,18 +932,18 @@ export class FluxStore {
     __getLocalVars(): Record<string, any>;
 }
 
-export interface Flux {
+interface Flux {
     Store: typeof FluxStore;
 }
 
-export class WindowStore extends FluxStore {
+class WindowStore extends FluxStore {
     isElementFullScreen(): boolean;
     isFocused(): boolean;
     windowSize(): Record<"width" | "height", number>;
 }
 
 type Emoji = CustomEmoji | UnicodeEmoji;
-export interface CustomEmoji {
+interface CustomEmoji {
     allNamesString: string;
     animated: boolean;
     available: boolean;
@@ -859,7 +957,7 @@ export interface CustomEmoji {
     url: string;
 }
 
-export interface UnicodeEmoji {
+interface UnicodeEmoji {
     diversityChildren: Record<any, any>;
     emojiObject: {
         names: string[];
@@ -885,7 +983,7 @@ export interface UnicodeEmoji {
     get url(): string;
 }
 
-export class EmojiStore extends FluxStore {
+class EmojiStore extends FluxStore {
     getCustomEmojiById(id?: string | null): CustomEmoji;
     getUsableCustomEmojiById(id?: string | null): CustomEmoji;
     getGuilds(): Record<string, {
@@ -943,7 +1041,7 @@ export class EmojiStore extends FluxStore {
     };
 }
 
-export interface DraftObject {
+interface DraftObject {
     channelId: string;
     timestamp: number;
     draft: string;
@@ -958,7 +1056,7 @@ interface DraftState {
 }
 
 
-export class DraftStore extends FluxStore {
+class DraftStore extends FluxStore {
     getDraft(channelId: string, type: DraftType): string;
     getRecentlyEditedDrafts(type: DraftType): DraftObject[];
     getState(): DraftState;
@@ -966,7 +1064,7 @@ export class DraftStore extends FluxStore {
     getThreadSettings(channelId: string): any | null;
 }
 
-export class GuildStore extends FluxStore {
+class GuildStore extends FluxStore {
     getGuild(guildId: string): Guild;
     getGuildCount(): number;
     getGuilds(): Record<string, Guild>;
@@ -976,7 +1074,7 @@ export class GuildStore extends FluxStore {
     getAllGuildRoles(): Record<string, Record<string, Role>>;
 }
 
-export interface FluxDispatcher {
+interface FluxDispatcher {
     _actionHandlers: any;
     _subscriptions: any;
     dispatch(event: { [key: string]: unknown; type: FluxEvents; }): Promise<void>;
@@ -986,7 +1084,7 @@ export interface FluxDispatcher {
     wait(callback: () => void): void;
 }
 
-export type Parser = Record<
+type Parser = Record<
     | "parse"
     | "parseTopic"
     | "parseEmbedTitle"
@@ -999,7 +1097,7 @@ export type Parser = Record<
     (content: string, inline?: boolean, state?: Record<string, any>) => ReactNode[]
 > & Record<"defaultRules" | "guildEventRules", Record<string, Record<"react" | "html" | "parse" | "match" | "order", any>>>;
 
-export interface Alerts {
+interface Alerts {
     show(alert: {
         title: any;
         body: React.ReactNode;
@@ -1017,7 +1115,7 @@ export interface Alerts {
     close(): void;
 }
 
-export interface SnowflakeUtils {
+interface SnowflakeUtils {
     fromTimestamp(timestamp: number): string;
     extractTimestamp(snowflake: string): number;
     age(snowflake: string): number;
@@ -1033,9 +1131,9 @@ interface RestRequestData {
     retries?: number;
 }
 
-export type RestAPI = Record<"delete" | "get" | "patch" | "post" | "put", (data: RestRequestData) => Promise<any>>;
+type RestAPI = Record<"delete" | "get" | "patch" | "post" | "put", (data: RestRequestData) => Promise<any>>;
 
-export type Permissions = "CREATE_INSTANT_INVITE"
+type Permissions = "CREATE_INSTANT_INVITE"
     | "KICK_MEMBERS"
     | "BAN_MEMBERS"
     | "ADMINISTRATOR"
@@ -1083,15 +1181,15 @@ export type Permissions = "CREATE_INSTANT_INVITE"
     | "MANAGE_EVENTS"
     | "CREATE_EVENTS";
 
-export type PermissionsBits = Record<Permissions, bigint>;
+type PermissionsBits = Record<Permissions, bigint>;
 
-export interface Locale {
+interface Locale {
     name: string;
     value: string;
     localizedName: string;
 }
 
-export interface LocaleInfo {
+interface LocaleInfo {
     code: string;
     enabled: boolean;
     name: string;
@@ -1099,7 +1197,7 @@ export interface LocaleInfo {
     postgresLang: string;
 }
 
-export interface i18n {
+interface i18n {
     getAvailableLocales(): Locale[];
     getLanguages(): LocaleInfo[];
     getDefaultLocale(): string;
@@ -1112,12 +1210,12 @@ export interface i18n {
     Messages: Record<i18nMessages, any>;
 }
 
-export interface Clipboard {
+interface Clipboard {
     copy(text: string): void;
     SUPPORTS_COPY: boolean;
 }
 
-export interface NavigationRouter {
+interface NavigationRouter {
     back(): void;
     forward(): void;
     hasNavigated(): boolean;
@@ -1133,7 +1231,7 @@ export interface NavigationRouter {
     getLastRouteChangeSourceLocationStack(): any;
 }
 
-export interface IconUtils {
+interface IconUtils {
     getUserAvatarURL(user: User, canAnimate?: boolean, size?: number, format?: string): string;
     getDefaultAvatarURL(id: string, discriminator?: string): string;
     getUserBannerURL(data: { id: string, banner: string, canAnimate?: boolean, size: number; }): string | undefined;
@@ -1177,18 +1275,11 @@ export interface IconUtils {
     getAnimatableSourceWithFallback: any;
 }
 
-export type FocusLock = ComponentType<PropsWithChildren<{
+type FocusLock = ComponentType<PropsWithChildren<{
     containerRef: RefObject<HTMLElement>
 }>>;
 
-export const enum ModalSize {
-    SMALL = "small",
-    MEDIUM = "medium",
-    LARGE = "large",
-    DYNAMIC = "dynamic",
-}
-
-export const enum ModalTransitionState {
+const enum ModalTransitionState {
     ENTERING,
     ENTERED,
     EXITING,
@@ -1196,7 +1287,12 @@ export const enum ModalTransitionState {
     HIDDEN,
 }
 
-export interface ModalProps {
+interface ModalProps {
     transitionState: ModalTransitionState;
     onClose(): Promise<void>;
 }
+
+type PropsWithChildren<P = unknown> = P & { children?: ReactNode | undefined };
+}
+
+export {}

@@ -1,16 +1,15 @@
-import type { ModalProps } from "../../../global";
-import { Button, Forms, Modals, TextInput } from "../../../common";
+import { Button, Forms, ModalContent, ModalFooter, ModalRoot, TextInput } from "../../../common";
 import { useState } from "react";
 import { hexToString } from "../utils";
 
 export default function({ modalProps, onColorwayId }: { modalProps: ModalProps, onColorwayId: (colorwayID: string) => void }) {
     const [colorwayID, setColorwayID] = useState<string>("")
-    return <Modals.ModalRoot {...modalProps} className="colorwaysCreator-noMinHeight">
-    <Modals.ModalContent className="colorwaysCreator-noHeader colorwaysCreator-noMinHeight">
+    return <ModalRoot {...modalProps} className="colorwaysCreator-noMinHeight">
+    <ModalContent className="colorwaysCreator-noHeader colorwaysCreator-noMinHeight">
         <Forms.FormTitle>Colorway ID:</Forms.FormTitle>
         <TextInput placeholder="Enter Colorway ID" onInput={e => setColorwayID(e.currentTarget.value)} />
-    </Modals.ModalContent>
-    <Modals.ModalFooter>
+    </ModalContent>
+    <ModalFooter>
         <Button
             style={{ marginLeft: 8 }}
             color={Button.Colors.BRAND}
@@ -38,6 +37,6 @@ export default function({ modalProps, onColorwayId }: { modalProps: ModalProps, 
         >
             Cancel
         </Button>
-    </Modals.ModalFooter>
-</Modals.ModalRoot>
+    </ModalFooter>
+</ModalRoot>
 }

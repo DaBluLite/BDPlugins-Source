@@ -1,10 +1,9 @@
-import { Button, Flex, Modals, ScrollerThin, TextInput, Toasts, Clipboard } from "../../../common";
+import { Button, Flex, Modals, ScrollerThin, TextInput, Toasts, Clipboard, ModalRoot } from "../../../common";
 import { colorVariables } from "../css";
 import React, { useState } from "react";
 import { CopyIcon } from "./Icons";
 import { mainColors } from "../constants";
 import { getHex } from "../utils";
-import type { ModalProps } from "../../../global";
 
 export default function ({ modalProps }: { modalProps: ModalProps; }) {
     const [ColorVars, setColorVars] = useState<string[]>(colorVariables);
@@ -20,7 +19,7 @@ export default function ({ modalProps }: { modalProps: ModalProps; }) {
         setColorVars(results);
     }
 
-    return <Modals.ModalRoot {...modalProps} className="colorwayColorpicker">
+    return <ModalRoot {...modalProps} className="colorwayColorpicker">
         <Flex style={{ gap: "8px", marginBottom: "8px" }}>
             <TextInput
                 className="colorwaysColorpicker-search"
@@ -70,5 +69,5 @@ export default function ({ modalProps }: { modalProps: ModalProps; }) {
             </div>
             )}
         </Flex>
-    </Modals.ModalRoot>;
+    </ModalRoot>;
 }

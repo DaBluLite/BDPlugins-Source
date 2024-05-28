@@ -1,6 +1,3 @@
-import { Webpack } from "betterdiscord";
-import { Filters } from "../../common";
-
 export function HexToHSL(H: string) {
     let r: any = 0, g: any = 0, b: any = 0;
     if (H.length === 4) r = "0x" + H[1] + H[1], g = "0x" + H[2] + H[2], b = "0x" + H[3] + H[3];

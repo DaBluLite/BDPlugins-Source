@@ -1,151 +1,41 @@
-import { defaultColorwaySource, fallbackColorways, knownColorwaySources } from "../../constants";
-import type { Colorway, FluxEvents } from "../../../../global";
+import { fallbackColorways } from "../../constants";
 import { useState, useEffect } from "react";
 import { Data } from "betterdiscord";
-import { CloseIcon, CopyIcon } from "../Icons";
 import plugin from "../../plugin.json"
-import { radioBarItem, radioBarItemFilled, Button, Flex, FluxDispatcher, Forms, Modals, SettingsTab, Switch, Text, TextInput, Clipboard, Link, ScrollerThin } from "../../../../common";
+import { Flex, FluxDispatcher, Forms, SettingsTab, Switch, Text, Link, getSetting, saveSettings } from "../../../../common";
+import type { FluxEvents } from "../../../../FluxEvents";
 
-export default function () {
+export default function ({ inModal }: { inModal?: boolean }) {
     const [colorways, setColorways] = useState<Colorway[]>([]);
-    const [colorwaySourceFiles, setColorwaySourceFiles] = useState<string[]>(Data.load("settings").colorwayLists);
-    const [colorsButtonVisibility, setColorsButtonVisibility] = useState<boolean>(Data.load("settings").showInGuildBar);
-    const [isButtonThin, setIsButtonThin] = useState<boolean>(Data.load("settings").isButtonThin);
+    const [colorsButtonVisibility, setColorsButtonVisibility] = useState<boolean>(getSetting("showColorwaysButton"));
+    const [isButtonThin, setIsButtonThin] = useState<boolean>(getSetting("useThinMenuButton"));
+    const [showLabelsInSelectorGridView, setShowLabelsInSelectorGridView] = useState<boolean>(getSetting("showLabelsInSelectorGridView"));
 
     useEffect(() => {
-        (async function() {
-            const responses: Response[] = await Promise.all(Data.load("settings").colorwayLists.map((url: string) => fetch(url)));
-            const data = await Promise.all(responses.map((res: Response) => res.json().catch(() => { return { colorways: [] }; })));
+        (async function () {
+            const responses: Response[] = await Promise.all(
+                getSetting("colorwayLists").map(({ url }: { url: string }) =>
+                    fetch(url)
+                )
+            );
+
+            const data = await Promise.all(
+                responses.map((res: Response) =>
+                    res.json()
+                ));
             const colorways = data.flatMap(json => json.colorways);
             setColorways(colorways || fallbackColorways);
-        })()
+        })();
     }, []);
 
-    return <SettingsTab title="Settings">
+    return <SettingsTab title="Settings" inModal={inModal}>
         <div className="colorwaysSettingsPage-wrapper">
-            <Flex style={{ gap: "0", marginBottom: "8px" }}>
-                <Forms.FormTitle tag="h5" style={{ width: "100%", marginBottom: "0", lineHeight: "32px" }}>Sources</Forms.FormTitle>
-                <Button
-                    className="colorwaysSettings-colorwaySourceAction"
-                    innerClassName="colorwaysSettings-iconButtonInner"
-                    style={{ flexShrink: "0" }}
-                    size={Button.Sizes.SMALL}
-                    color={Button.Colors.TRANSPARENT}
-                    onClick={() => {
-                        Modals.openModal((props: any) => {
-                            var colorwaySource = "";
-                            return <Modals.ModalRoot {...props} className="colorwaySourceModal">
-                                <Modals.ModalHeader>
-                                    <Text variant="heading-lg/semibold" tag="h1">
-                                        Add a source:
-                                    </Text>
-                                </Modals.ModalHeader>
-                                <TextInput
-                                    placeholder="Enter a valid URL..."
-                                    onChange={e => colorwaySource = e}
-                                    style={{ margin: "8px", width: "calc(100% - 16px)" }}
-                                />
-                                <Modals.ModalFooter>
-                                    <Button
-                                        style={{ marginLeft: 8 }}
-                                        color={Button.Colors.BRAND}
-                                        size={Button.Sizes.MEDIUM}
-                                        look={Button.Looks.FILLED}
-                                        onClick={() => {
-                                            var sourcesArr: string[] = [];
-                                            Data.load("settings").colorwayLists.map((source: string) => sourcesArr.push(source));
-                                            if (colorwaySource !== defaultColorwaySource) {
-                                                sourcesArr.push(colorwaySource);
-                                            }
-                                            Data.save("settings", { ...Data.load("settings"), colorwayLists: sourcesArr });
-                                            setColorwaySourceFiles(sourcesArr);
-                                            props.onClose();
-                                        }}
-                                    >
-                                        Finish
-                                    </Button>
-                                    <Button
-                                        style={{ marginLeft: 8 }}
-                                        color={Button.Colors.PRIMARY}
-                                        size={Button.Sizes.MEDIUM}
-                                        look={Button.Looks.OUTLINED}
-                                        onClick={() => props.onClose()}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Modals.ModalFooter>
-                            </Modals.ModalRoot>;
-                        });
-                    }}>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                        role="img"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24">
-                        <path
-                            fill="currentColor"
-                            d="M20 11.1111H12.8889V4H11.1111V11.1111H4V12.8889H11.1111V20H12.8889V12.8889H20V11.1111Z"
-                        />
-                    </svg>
-                    Add a source...
-                </Button>
-            </Flex>
-            <ScrollerThin orientation="vertical" style={{ maxHeight: "250px" }} className="colorwaysSettings-sourceScroller">
-                {getComputedStyle(document.body).getPropertyValue("--os-accent-color") ? <div className={`${radioBarItem} ${radioBarItemFilled} colorwaysSettings-colorwaySource`}>
-                    <Text className="colorwaysSettings-colorwaySourceLabel">OS Accent Color <div className="colorways-badge">Built-In</div></Text>
-                </div> : <></>}
-                {colorwaySourceFiles?.map((colorwaySourceFile: string) => <div className={`${radioBarItem} ${radioBarItemFilled} colorwaysSettings-colorwaySource`}>
-                    {knownColorwaySources.find(o => o.url === colorwaySourceFile) ? <div className="hoverRoll">
-                        <Text className="colorwaysSettings-colorwaySourceLabel hoverRoll_normal">
-                            {knownColorwaySources.find(o => o.url === colorwaySourceFile)!.name} {colorwaySourceFile === defaultColorwaySource && <div className="colorways-badge">DEFAULT</div>}
-                        </Text>
-                        <Text className="colorwaysSettings-colorwaySourceLabel hoverRoll_hovered">
-                            {colorwaySourceFile}
-                        </Text>
-                    </div>
-                        : <Text className="colorwaysSettings-colorwaySourceLabel">
-                            {colorwaySourceFile}
-                        </Text>}
-                    {colorwaySourceFile !== defaultColorwaySource
-                        && <Button
-                            innerClassName="colorwaysSettings-iconButtonInner"
-                            size={Button.Sizes.ICON}
-                            color={Button.Colors.PRIMARY}
-                            look={Button.Looks.OUTLINED}
-                            onClick={async () => {
-                                var sourcesArr: string[] = [];
-                                Data.load("settings").colorwayLists.map((source: string) => {
-                                    if (source !== colorwaySourceFile) {
-                                        sourcesArr.push(source);
-                                    }
-                                });
-                                Data.save("settings", { ...Data.load("settings"), colorwayLists: sourcesArr });
-                                setColorwaySourceFiles(sourcesArr);
-                            }}
-                        >
-                            <CloseIcon width={20} height={20} />
-                        </Button>}
-                    <Button
-                        innerClassName="colorwaysSettings-iconButtonInner"
-                        size={Button.Sizes.ICON}
-                        color={Button.Colors.PRIMARY}
-                        look={Button.Looks.OUTLINED}
-                        onClick={() => { Clipboard.copy(colorwaySourceFile); }}
-                    >
-                        <CopyIcon width={20} height={20} />
-                    </Button>
-                </div>
-                )}
-            </ScrollerThin>
-            <Forms.FormDivider style={{ margin: "20px 0" }}/>
             <Forms.FormTitle tag="h5">Quick Switch</Forms.FormTitle>
             <Switch
                 value={colorsButtonVisibility}
                 onChange={(v: boolean) => {
                     setColorsButtonVisibility(v);
-                    Data.save("settings", { ...Data.load("settings"), showInGuildBar: v });
+                    saveSettings({ showColorwaysButton: v });
                     FluxDispatcher.dispatch({
                         type: "COLORWAYS_UPDATE_BUTTON_VISIBILITY" as FluxEvents,
                         isVisible: v
@@ -159,7 +49,7 @@ export default function () {
                 value={isButtonThin}
                 onChange={(v: boolean) => {
                     setIsButtonThin(v);
-                    Data.save("settings", { ...Data.load("settings"), isButtonThin: v });
+                    saveSettings({ useThinMenuButton: v });
                     FluxDispatcher.dispatch({
                         type: "COLORWAYS_UPDATE_BUTTON_HEIGHT" as FluxEvents,
                         isTall: v
@@ -168,6 +58,16 @@ export default function () {
                 note="Replaces the icon on the colorways launcher button with text, making it more compact."
             >
                 Use thin Quick Switch button
+            </Switch>
+            <Forms.FormTitle tag="h5">Selector</Forms.FormTitle>
+            <Switch
+                value={showLabelsInSelectorGridView}
+                onChange={(v: boolean) => {
+                    setShowLabelsInSelectorGridView(v);
+                    saveSettings({ showLabelsInSelectorGridView: v });
+                }}
+            >
+                Show labels in Grid View
             </Switch>
             <Flex flexDirection="column" style={{ gap: 0 }}>
                 <h1 style={{
@@ -220,8 +120,7 @@ export default function () {
                         marginBottom: "8px"
                     }}
                 >
-                    {plugin.creatorVersion}{" "}
-                    (Stable)
+                    {plugin.creatorVersion}
                 </Text>
                 <Forms.FormTitle style={{ marginBottom: 0 }}>
                     Loaded Colorways:
@@ -235,7 +134,7 @@ export default function () {
                         marginBottom: "8px"
                     }}
                 >
-                    {[...colorways, ...Data.load("custom_colorways")].length}
+                    {[...colorways, ...(Data.load("custom_colorways") as OfflineSourceObject[]).map(source => source.colorways).flat(2)].length + 1}
                 </Text>
                 <Forms.FormTitle style={{ marginBottom: 0 }}>
                     Project Repositories:

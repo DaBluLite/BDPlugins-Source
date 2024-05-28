@@ -1,13 +1,13 @@
 import { Data } from "betterdiscord";
 import { useState } from "react";
-import { SettingsTab, Switch } from "../../../../common";
+import { SettingsTab, Switch, getSetting } from "../../../../common";
 
-export default function () {
-    const [onDemand, setOnDemand] = useState<boolean>(Data.load("settings").onDemandWays);
-    const [onDemandTinted, setOnDemandTinted] = useState<boolean>(Data.load("settings").onDemandWaysTintedText);
-    const [onDemandDiscordSat, setOnDemandDiscordSat] = useState<boolean>(Data.load("settings").onDemandWaysDiscordSaturation);
+export default function ({ inModal }: { inModal?: boolean }) {
+    const [onDemand, setOnDemand] = useState<boolean>(getSetting("onDemandWays"));
+    const [onDemandTinted, setOnDemandTinted] = useState<boolean>(getSetting("onDemandWaysTintedText"));
+    const [onDemandDiscordSat, setOnDemandDiscordSat] = useState<boolean>(getSetting("onDemandWaysDiscordSaturation"));
     const [onDemandOsAccent, setOnDemandOsAccent] = useState<boolean>(!getComputedStyle(document.body).getPropertyValue("--os-accent-color") ? false : Data.load("settings").onDemandWaysOsAccentColor);
-    return <SettingsTab title="On-Demand">
+    return <SettingsTab title="On-Demand" inModal={inModal}>
         <Switch
             value={onDemand}
             onChange={(v: boolean) => {

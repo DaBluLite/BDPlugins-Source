@@ -1,8 +1,7 @@
 import { CloseIcon } from "./Icons";
-import { Modals, Text } from "../../../common";
+import { ModalRoot, Text, openModal } from "../../../common";
 
 import { HexToHSL } from "../utils";
-import type { ModalProps } from "../../../global";
 
 export default function ThemePreview({
     accent,
@@ -42,12 +41,12 @@ export default function ThemePreview({
                                 if (isModal) {
                                     modalProps?.onClose();
                                 } else {
-                                    Modals.openModal((props: ModalProps) => <Modals.ModalRoot className="colorwaysPreview-modal" {...props}>
+                                    openModal((props: ModalProps) => <ModalRoot className="colorwaysPreview-modal" {...props}>
                                         <style>
                                             {previewCSS}
                                         </style>
                                         <ThemePreview accent={accent} primary={primary} secondary={secondary} tertiary={tertiary} isModal modalProps={props} />
-                                    </Modals.ModalRoot>);
+                                    </ModalRoot>);
                                 }
                             }}
                         >
@@ -104,7 +103,11 @@ export default function ThemePreview({
                             background: `var(--dc-secondary-alt, hsl(${HexToHSL(secondary)[0]} ${HexToHSL(secondary)[1]}% ${Math.max(HexToHSL(secondary)[2] - 3.6, 0)}%))`
                         }}
                     />
-                    <div className="colorwayPreview-filler" />
+                    <div className="colorwayPreview-filler">
+                        <div className="colorwayPreview-channel" style={{ backgroundColor: "var(--white-500)" }} />
+                        <div className="colorwayPreview-channel" style={{ backgroundColor: "var(--primary-360)" }} />
+                        <div className="colorwayPreview-channel" style={{ backgroundColor: "var(--primary-500)" }} />
+                    </div>
                     <div
                         className="colorwayPreview-topShadow"
                         style={{

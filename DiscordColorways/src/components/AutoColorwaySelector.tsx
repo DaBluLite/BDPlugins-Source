@@ -1,19 +1,18 @@
 import { Data } from "betterdiscord";
-import type { ModalProps } from "../../../global";
 import { getAutoPresets } from "../css";
 import { useState } from "react";
-import { radioBar, radioBarItem, radioBarItemFilled, radioPositionLeft, Button, Forms, Modals, Text } from "../../../common";
+import { radioBar, radioBarItem, radioBarItemFilled, radioPositionLeft, Button, Forms, Text, ModalContent, ModalFooter, ModalHeader, ModalRoot } from "../../../common";
 
 
 export default function({ modalProps, onChange }: { modalProps: ModalProps, onChange: (autoPresetId: string) => void }) {
     const [autoId, setAutoId] = useState(Data.load("settings").activeAutoPreset);
-    return <Modals.ModalRoot {...modalProps}>
-        <Modals.ModalHeader>
+    return <ModalRoot {...modalProps}>
+        <ModalHeader>
             <Text variant="heading-lg/semibold" tag="h1">
                 Auto Preset Settings
             </Text>
-        </Modals.ModalHeader>
-        <Modals.ModalContent>
+        </ModalHeader>
+        <ModalContent>
             <div className="dc-info-card" style={{ marginTop: "1em" }}>
                 <strong>About the Auto Colorway</strong>
                 <span>The auto colorway allows you to use your system's accent color in combination with a selection of presets that will fully utilize it.</span>
@@ -37,8 +36,8 @@ export default function({ modalProps, onChange }: { modalProps: ModalProps, onCh
                     </div>;
                 })}
             </div>
-        </Modals.ModalContent>
-        <Modals.ModalFooter>
+        </ModalContent>
+        <ModalFooter>
             <Button
                 style={{ marginLeft: 8 }}
                 color={Button.Colors.BRAND_NEW}
@@ -62,6 +61,6 @@ export default function({ modalProps, onChange }: { modalProps: ModalProps, onCh
             >
                 Cancel
             </Button>
-        </Modals.ModalFooter>
-    </Modals.ModalRoot>
+        </ModalFooter>
+    </ModalRoot>
 }

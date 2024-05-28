@@ -1,4 +1,4 @@
-import { FluxDispatcher, Modals, Text, Tooltip } from "../../../common";
+import { FluxDispatcher, Modals, Text, Tooltip, getSetting, openModal } from "../../../common";
 import { useState } from "react";
 import { Data } from "betterdiscord";
 import Selector from "./Selector";
@@ -25,7 +25,7 @@ export default function() {
                 <span>Colorways</span>
                 <Text variant="text-xs/normal" style={{ color: "var(--text-muted)", fontWeight: 500 }}>{"Active Colorway: " + activeColorway}</Text>
             </> : <span>{"Active Colorway: " + activeColorway}</span>}
-            {Data.load("settings").activeColorwayID === "Auto" ? <Text variant="text-xs/normal" style={{ color: "var(--text-muted)", fontWeight: 500 }}>{"Auto Preset: " + getAutoPresets()[Data.load("settings").activeAutoPreset].name}</Text> : <></>}
+            {getSetting("activeColorwayObject").id === "Auto" ? <Text variant="text-xs/normal" style={{ color: "var(--text-muted)", fontWeight: 500 }}>{"Auto Preset: " + getAutoPresets()[Data.load("settings").activeAutoPreset].name}</Text> : <></>}
         </>
     } position="right" tooltipContentClassName="colorwaysBtn-tooltipContent"
     >
@@ -34,12 +34,12 @@ export default function() {
                 className={"ColorwaySelectorBtn" + (isThin ? " ColorwaySelectorBtn_thin" : "")}
                 onMouseEnter={() => {
                     onMouseEnter();
-                    setActiveColorway(Data.load("settings").activeColorwayID || "None");
+                    setActiveColorway(getSetting("activeColorwayObject").id || "None");
                 }}
                 onMouseLeave={onMouseLeave}
                 onClick={() => {
                     onClick();
-                    Modals.openModal((props: any) => <Selector modalProps={props} />);
+                    openModal((props: any) => <Selector modalProps={props} />);
                 }}
             >{isThin ? <Text variant="text-xs/normal" style={{ color: "var(--header-primary)", fontWeight: 700, fontSize: 9 }}>Colorways</Text> : <PalleteIcon />}</div>
         </div> : <></>}

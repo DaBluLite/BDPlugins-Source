@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { DOM, Webpack as Webpack$1 } from "betterdiscord";
-import type * as t from "./global";
+import { Data, Webpack as Webpack$1 } from "betterdiscord";
+import type { ComponentType } from "react";
+import Spinner from "./DiscordColorways/src/components/Spinner";
 
 export type FilterFn = (mod: any) => boolean;
 
@@ -158,6 +159,8 @@ function removeListener(listener: unknown) {
   return listeners.delete(listener);
 }
 
+export const subscriptions = new Map<FilterFn, CallbackFn>();
+
 export const Webpack = {
   ...Webpack$1,
   getLazy: (
@@ -229,7 +232,7 @@ export const Webpack = {
         resolve(null);
       });
     });
-  },
+  }
 };
 
 export const ReactDOMInternals =
@@ -336,17 +339,16 @@ export const findOwner = (fiber: any, depth = 50) => {
 };
 
 export const ColorwayCSS = {
-  get: () => document.getElementById("activeColorwayCSS")?.textContent || "",
+  get: () => document.getElementById("activeColorwayCSS")!.textContent || "",
   set: (e: string) => {
-    if (e == "") {
-      DOM.removeStyle("activeColorwayCSS");
-    } else {
       if (!document.getElementById("activeColorwayCSS")) {
-        DOM.addStyle("activeColorwayCSS", e);
+          document.head.append(Object.assign(document.createElement("style"), {
+              id: "activeColorwayCSS",
+              textContent: e
+          }));
       } else document.getElementById("activeColorwayCSS")!.textContent = e;
-    }
   },
-  remove: () => DOM.removeStyle("activeColorwayCSS"),
+  remove: () => document.getElementById("activeColorwayCSS")!.remove(),
 };
 
 /**
@@ -487,10 +489,6 @@ export function makeLazy<T>(factory: () => T, attempts = 5): () => T {
     return cache;
   };
 }
-
-import type { ComponentType } from "react";
-import type { FluxStore } from "./global";
-import Spinner from "./DiscordColorways/src/components/Spinner";
 
 const NoopComponent = () => null;
 
@@ -642,40 +640,37 @@ export const {
   ) => T;
 } = proxyLazy(() => Webpack.getModule(Filters.byProps("useStateFromStores"))) as any;
 
-export let Clipboard: t.Clipboard;
+export let Clipboard: Clipboard;
 export let Forms = {} as {
-  FormTitle: t.FormTitle;
-  FormSection: t.FormSection;
-  FormDivider: t.FormDivider;
-  FormText: t.FormText;
+  FormTitle: FormTitle;
+  FormSection: FormSection;
+  FormDivider: FormDivider;
+  FormText: FormText;
 };
 
-export let Card: t.Card;
-export let Button: t.Button;
-export let Switch: t.Switch;
-export let Tooltip: t.Tooltip;
-export let TextInput: t.TextInput;
-export let TextArea: t.TextArea;
-export let Text: t.Text;
-export let Select: t.Select;
-export let SearchableSelect: t.SearchableSelect;
-export let Slider: t.Slider;
-export let ButtonLooks: t.ButtonLooks;
-export let Popout: t.Popout;
-export let Dialog: t.Dialog;
+export let Card: Card;
+export let Button: Button;
+export let Switch: Switch;
+export let Tooltip: Tooltip;
+export let TextInput: TextInput;
+export let TextArea: TextArea;
+export let Text: TextComponent;
+export let Select: Select;
+export let SearchableSelect: SearchableSelect;
+export let Slider: Slider;
+export let ButtonLooks: ButtonLooks;
+export let Popout: Popout;
+export let Dialog: Dialog;
 export let TabBar: any;
-export let Paginator: t.Paginator;
-export let ScrollerThin: t.ScrollerThin;
-export let Clickable: t.Clickable;
-export let Avatar: t.Avatar;
-export let FocusLock: t.FocusLock;
-export let useToken: t.useToken;
+export let Paginator: Paginator;
+export let ScrollerThin: ScrollerThin;
+export let Clickable: Clickable;
+export let Avatar: Avatar;
+export let FocusLock: FocusLock;
+export let useToken: useToken;
 export const SettingsRouter = Webpack.getByKeys("open", "saveAccountChanges");
-export const Menu = {
-  Menu: Webpack.getByKeys("Menu").Menu,
-  MenuItem: Webpack.getByKeys("Menu").MenuItem,
-};
-export let ColorPicker: React.FunctionComponent<t.ColorPickerProps> = () => {
+export const Menu: Menu = { ...Webpack.getByKeys("MenuItem", "MenuSliderControl") };
+export let ColorPicker: React.FunctionComponent<ColorPickerProps> = () => {
   return <Spinner className="colorways-creator-module-warning" />;
 };
 
@@ -724,25 +719,25 @@ export function Flex(
   delete props.flexDirection;
   return <div {...props}>{props.children}</div>;
 }
-export let PermissionStore: t.GenericStore;
-export let GuildChannelStore: t.GenericStore;
-export let ReadStateStore: t.GenericStore;
-export let PresenceStore: t.GenericStore;
-export let GuildStore: t.GuildStore;
-export let UserStore: t.UserStore & t.FluxStore;
-export let UserProfileStore: t.GenericStore;
-export let SelectedChannelStore: t.SelectedChannelStore & t.FluxStore;
-export let SelectedGuildStore: t.FluxStore & Record<string, any>;
-export let ChannelStore: t.ChannelStore & t.FluxStore;
-export let GuildMemberStore: t.GuildMemberStore & t.FluxStore;
-export let RelationshipStore: t.RelationshipStore &
-  t.FluxStore & {
+export let PermissionStore: GenericStore;
+export let GuildChannelStore: GenericStore;
+export let ReadStateStore: GenericStore;
+export let PresenceStore: GenericStore;
+export let GuildStore: GuildStore;
+export let UserStore: UserStore & FluxStore;
+export let UserProfileStore: GenericStore;
+export let SelectedChannelStore: SelectedChannelStore & FluxStore;
+export let SelectedGuildStore: FluxStore & Record<string, any>;
+export let ChannelStore: ChannelStore & FluxStore;
+export let GuildMemberStore: GuildMemberStore & FluxStore;
+export let RelationshipStore: RelationshipStore &
+  FluxStore & {
     getSince(userId: string): string;
   };
-export let EmojiStore: t.EmojiStore;
-export let WindowStore: t.WindowStore;
-export let DraftStore: t.DraftStore;
-export let MessageStore: Omit<t.MessageStore, "getMessages"> & {
+export let EmojiStore: EmojiStore;
+export let WindowStore: WindowStore;
+export let DraftStore: DraftStore;
+export let MessageStore: Omit<MessageStore, "getMessages"> & {
   getMessages(chanId: string): any;
 };
 export const UserProfileActions = proxyLazy(() =>
@@ -751,54 +746,74 @@ export const UserProfileActions = proxyLazy(() =>
 export const UserUtils = proxyLazy(
   () =>
     Webpack.getByKeys("getUser", "fetchCurrentUser") as {
-      getUser: (id: string) => Promise<t.User>;
+      getUser: (id: string) => Promise<User>;
     }
 );
-export const Modals = {
-  openModal: Webpack.getByKeys("openModal", "ModalHeader").openModal,
-  ModalRoot: Webpack.getByKeys("ModalRoot").ModalRoot as React.ComponentType<
-    React.PropsWithChildren<{
-      transitionState: t.ModalTransitionState;
-      size?: t.ModalSize;
+
+const enum ModalSize {
+  SMALL = "small",
+  MEDIUM = "medium",
+  LARGE = "large",
+  DYNAMIC = "dynamic",
+}
+
+export const Modals = proxyLazy(() => Webpack.getByKeys("ModalRoot", "ModalCloseButton")) as {
+  ModalRoot: ComponentType<PropsWithChildren<{
+      transitionState: ModalTransitionState;
+      size?: ModalSize | "small" | "medium" | "large" | "dynamic";
       role?: "alertdialog" | "dialog";
       className?: string;
       fullscreenOnMobile?: boolean;
       "aria-label"?: string;
       "aria-labelledby"?: string;
       onAnimationEnd?(): string;
-    }>
-  >,
-  ModalHeader: Webpack.getByKeys("ModalRoot")
-    .ModalHeader as React.ComponentType<
-    React.PropsWithChildren<{
+  }>>;
+  ModalHeader: ComponentType<PropsWithChildren<{
+      /** Flex.Justify.START */
       justify?: string;
+      /** Flex.Direction.HORIZONTAL */
       direction?: string;
+      /** Flex.Align.CENTER */
       align?: string;
+      /** Flex.Wrap.NO_WRAP */
       wrap?: string;
       separator?: boolean;
+
       className?: string;
-    }>
-  >,
-  ModalContent: Webpack.getByKeys("ModalRoot")
-    .ModalContent as React.ComponentType<
-    React.PropsWithChildren<{
+  }>>;
+  /** This also accepts Scroller props but good luck with that */
+  ModalContent: ComponentType<PropsWithChildren<{
       className?: string;
-      scrollerRef?: React.Ref<HTMLElement>;
+      scrollerRef?: Ref<HTMLElement>;
       [prop: string]: any;
-    }>
-  >,
-  ModalFooter: Webpack.getByKeys("ModalRoot")
-    .ModalFooter as React.ComponentType<
-    React.PropsWithChildren<{
+  }>>;
+  ModalFooter: ComponentType<PropsWithChildren<{
+      /** Flex.Justify.START */
       justify?: string;
+      /** Flex.Direction.HORIZONTAL_REVERSE */
       direction?: string;
+      /** Flex.Align.STRETCH */
       align?: string;
+      /** Flex.Wrap.NO_WRAP */
       wrap?: string;
       separator?: boolean;
+
       className?: string;
-    }>
-  >,
+  }>>;
+  ModalCloseButton: ComponentType<{
+      focusProps?: any;
+      onClick(): void;
+      withCircleBackground?: boolean;
+      hideOnFullscreen?: boolean;
+      className?: string;
+  }>;
 };
+
+export const ModalRoot = LazyComponent(() => Modals.ModalRoot);
+export const ModalHeader = LazyComponent(() => Modals.ModalHeader);
+export const ModalContent = LazyComponent(() => Modals.ModalContent);
+export const ModalFooter = LazyComponent(() => Modals.ModalFooter);
+export const ModalCloseButton = LazyComponent(() => Modals.ModalCloseButton);
 
 export const Toasts = {
   show: Webpack.getByKeys("showToast")["showToast"],
@@ -833,30 +848,30 @@ export function waitForStore(storeName: string, callback: any) {
   );
 }
 
-waitForStore("DraftStore", (s: t.DraftStore) => (DraftStore = s));
-waitForStore("UserStore", (s: t.UserStore & t.FluxStore) => (UserStore = s));
+waitForStore("DraftStore", (s: DraftStore) => (DraftStore = s));
+waitForStore("UserStore", (s: UserStore & FluxStore) => (UserStore = s));
 waitForStore(
   "SelectedChannelStore",
-  (s: t.SelectedChannelStore & t.FluxStore) => (SelectedChannelStore = s)
+  (s: SelectedChannelStore & FluxStore) => (SelectedChannelStore = s)
 );
 waitForStore(
   "SelectedGuildStore",
-  (s: t.FluxStore & Record<string, any>) => (SelectedGuildStore = s)
+  (s: FluxStore & Record<string, any>) => (SelectedGuildStore = s)
 );
 waitForStore("UserProfileStore", (m: any) => (UserProfileStore = m));
 waitForStore(
   "ChannelStore",
-  (m: t.ChannelStore & t.FluxStore) => (ChannelStore = m)
+  (m: ChannelStore & FluxStore) => (ChannelStore = m)
 );
-waitForStore("GuildStore", (m: t.GuildStore) => (GuildStore = m));
+waitForStore("GuildStore", (m: GuildStore) => (GuildStore = m));
 waitForStore(
   "GuildMemberStore",
-  (m: t.GuildMemberStore & t.FluxStore) => (GuildMemberStore = m)
+  (m: GuildMemberStore & FluxStore) => (GuildMemberStore = m)
 );
 waitForStore(
   "RelationshipStore",
   (
-    m: t.RelationshipStore & t.FluxStore & { getSince(userId: string): string }
+    m: RelationshipStore & FluxStore & { getSince(userId: string): string }
   ) => (RelationshipStore = m)
 );
 waitForStore("PermissionStore", (m: any) => (PermissionStore = m));
@@ -866,33 +881,35 @@ waitForStore("GuildChannelStore", (m: any) => (GuildChannelStore = m));
 waitForStore(
   "MessageStore",
   (
-    m: Omit<t.MessageStore, "getMessages"> & {
+    m: Omit<MessageStore, "getMessages"> & {
       getMessages(chanId: string): any;
     }
   ) => (MessageStore = m)
 );
-waitForStore("WindowStore", (m: t.WindowStore) => (WindowStore = m));
-waitForStore("EmojiStore", (m: t.EmojiStore) => (EmojiStore = m));
+waitForStore("WindowStore", (m: WindowStore) => (WindowStore = m));
+waitForStore("EmojiStore", (m: EmojiStore) => (EmojiStore = m));
 Webpack.waitForModule(Filters.byKeys("SUPPORTS_COPY", "copy")).then(
-  (e: t.Clipboard) => (Clipboard = e)
+  (e: Clipboard) => (Clipboard = e)
 );
 
 export function SettingsTab({
   title,
   children,
+  inModal
 }: {
   title: string;
   children: any;
+  inModal?: boolean;
 }) {
   return (
     <Forms.FormSection>
-      <Text
+      {!inModal && <Text
         variant="heading-lg/semibold"
         tag="h2"
         style={{ marginBottom: "16px" }}
       >
         {title}
-      </Text>
+      </Text>}
 
       {children}
     </Forms.FormSection>
@@ -934,4 +951,67 @@ export function Link(props: React.PropsWithChildren<Props>) {
       {props.children}
     </a>
   );
+}
+
+const ModalAPI = proxyLazy(() => Webpack.getByKeys("openModalLazy"));
+
+/**
+ * Wait for the render promise to resolve, then open a modal with it.
+ * This is equivalent to render().then(openModal)
+ * You should use the Modal components exported by this file
+ */
+export function openModalLazy(render: () => Promise<RenderFunction>, options?: ModalOptions & { contextKey?: string; }): Promise<string> {
+    return ModalAPI.openModalLazy(render, options);
+}
+
+/**
+ * Open a Modal with the given render function.
+ * You should use the Modal components exported by this file
+ */
+export function openModal(render: RenderFunction, options?: ModalOptions, contextKey?: string): string {
+    return ModalAPI.openModal(render, options, contextKey);
+}
+
+/**
+ * Close a modal by its key
+ */
+export function closeModal(modalKey: string, contextKey?: string): void {
+    return ModalAPI.closeModal(modalKey, contextKey);
+}
+
+/**
+ * Close all open modals
+ */
+export function closeAllModals(): void {
+    return ModalAPI.closeAllModals();
+}
+
+export let Parser: Parser;
+Webpack.waitForModule(Filters.byKeys("parseTopic")).then(m => Parser = m);
+
+export function classes(...classes: Array<string | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export const enum Theme {
+  Dark = 1,
+  Light = 2
+}
+
+export const UserSettingsActionCreators = proxyLazy(() => Webpack.getByKeys("PreloadedUserSettingsActionCreators"));
+
+export function getTheme(): Theme {
+  return UserSettingsActionCreators.PreloadedUserSettingsActionCreators.getCurrentValue()?.appearance?.theme;
+}
+
+export function saveSettings(settings: { [key: string]: any }) {
+  Data.save("settings", { ...Data.load("settings"), ...settings });
+}
+
+export function getSetting(setting: string) {
+  return Data.load("settings")[setting];
+}
+
+export function getBulkSetting(...settings: string[]) {
+  return settings.map(setting => Data.load("settings")[setting]);
 }

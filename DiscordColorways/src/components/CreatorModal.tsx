@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { fallbackColorways, knownThemeVars } from "../constants";
 import { generateCss, getPreset, gradientPresetIds, pureGradientBase } from "../css";
-import type { Colorway, ModalProps } from "../../../global";
-import { getHex, hexToString } from "../utils";
+import { HexToHSL, getHex, hexToString } from "../utils";
 import ConflictingColorsModal from "./ConflictingColorsModal";
 import ThemePreviewCategory from "./ThemePreview";
 import { Data } from "betterdiscord";
-import { colorToHex, Forms, Modals, TextInput, Text, Button, UserStore, ColorPicker } from "../../../common";
+import { colorToHex, Forms, TextInput, Text, Button, UserStore, ColorPicker, ModalContent, ModalFooter, ModalHeader, ModalRoot, openModal, Slider } from "../../../common";
 import InputColorwayIdModal from "./InputColorwayIdModal";
 import ColorwayCreatorSettingsModal from "./ColorwayCreatorSettingsModal";
+import SaveColorwayModal from "./SaveColorwayModal";
+import plugin from "../plugin.json";
+
 export default function ({
     modalProps,
     loadUIProps,
@@ -27,8 +29,7 @@ export default function ({
     const [discordSaturation, setDiscordSaturation] = useState<boolean>(true);
     const [preset, setPreset] = useState<string>("default");
     const [presetColorArray, setPresetColorArray] = useState<string[]>(["accent", "primary", "secondary", "tertiary"]);
-    const [nameError, setNameError] = useState<string>();
-    const [colorwayNames, setColorwayNames] = useState<string[]>(["Auto", ...Data.load("custom_colorways").map((color: Colorway) => color.name)]);
+    const [mutedTextBrightness, setMutedTextBrightness] = useState<number>(Math.min(HexToHSL("#" + primaryColor)[2] + (3.6 * 3), 100));
 
     const colorProps: { [key: string]: { get: string, set: React.Dispatch<React.SetStateAction<string>>, name: string } } = {
         accent: {
@@ -54,11 +55,12 @@ export default function ({
     };
 
     useEffect(() => {
-        const parsedID = colorwayID?.split("colorway:")[1];
-        if (parsedID) {
-            if (!parsedID) {
-                throw new Error("Please enter a Colorway ID");
-            } else if (!hexToString(parsedID).includes(",")) {
+        
+    });
+
+    useEffect(() => {
+        if (colorwayID) {
+            if (!colorwayID.includes(",")) {
                 throw new Error("Invalid Colorway ID");
             } else {
                 const setColor = [
@@ -67,22 +69,22 @@ export default function ({
                     setSecondaryColor,
                     setTertiaryColor
                 ];
-                hexToString(parsedID).split(/,#/).forEach((color: string, i: number) => setColor[i](colorToHex(color)));
+                colorwayID.split("|").forEach((prop: string) => {
+                    if (prop.includes(",#")) {
+                        prop.split(/,#/).forEach((color: string, i: number) => setColor[i](colorToHex(color)));
+                    }
+                    if (prop.includes("n:")) {
+                        setColorwayName(prop.split("n:")[1]);
+                    }
+                    if (prop.includes("p:")) {
+                        if (Object.values(getPreset()).map(preset => preset.id).includes(prop.split("p:")[1])) {
+                            setPreset(prop.split("p:")[1]);
+                            setPresetColorArray(getPreset()[prop.split("p:")[1]].colors);
+                        }
+                    }
+                });
             }
         }
-        (async function() {
-            const responses: Response[] = await Promise.all(
-                Data.load("settings").colorwayLists.map((url: string) =>
-                    fetch(url)
-                )
-            );
-            const data = await Promise.all(
-                responses.map((res: Response) =>
-                    res.json().catch(() => { return { colorways: [] }; })
-                ));
-            const colorways = data.flatMap(json => json.colorways);
-            setColorwayNames([...colorwayNames, ...(colorways || fallbackColorways).map((color: Colorway) => color.name)]);
-        })()
     });
     const colorPickerProps = {
         suggestedColors: [
@@ -95,13 +97,13 @@ export default function ({
     };
 
     return (
-        <Modals.ModalRoot {...modalProps} className="colorwayCreator-modal">
-            <Modals.ModalHeader>
+        <ModalRoot {...modalProps} className="colorwayCreator-modal">
+            <ModalHeader>
                 <Text variant="heading-lg/semibold" tag="h1">
                     Create Colorway
                 </Text>
-            </Modals.ModalHeader>
-            <Modals.ModalContent className="colorwayCreator-menuWrapper">
+            </ModalHeader>
+            <ModalContent className="colorwayCreator-menuWrapper">
                 <Forms.FormTitle style={{ marginBottom: 0 }}>
                     Name:
                 </Forms.FormTitle>
@@ -109,11 +111,10 @@ export default function ({
                     placeholder="Give your Colorway a name"
                     value={colorwayName}
                     onChange={setColorwayName}
-                    error={nameError}
                 />
                 <div className="colorwaysCreator-settingCat">
                     <Forms.FormTitle style={{ marginBottom: "0" }}>
-                        Colors:
+                        Colors & Values:
                     </Forms.FormTitle>
                     <div className="colorwayCreator-colorPreviews">
                         {presetColorArray.map(presetColor => {
@@ -131,10 +132,18 @@ export default function ({
                             />;
                         })}
                     </div>
+                    <Forms.FormDivider style={{ margin: "10px 0" }} />
+                    <Forms.FormTitle>Muted Text Brightness:</Forms.FormTitle>
+                    <Slider
+                        minValue={0}
+                        maxValue={100}
+                        initialValue={mutedTextBrightness}
+                        onValueChange={setMutedTextBrightness}
+                    />
                 </div>
                 <div
                     className="colorwaysCreator-setting"
-                    onClick={() => Modals.openModal((props: ModalProps) => <ColorwayCreatorSettingsModal
+                    onClick={() => openModal((props: ModalProps) => <ColorwayCreatorSettingsModal
                         modalProps={props}
                         hasDiscordSaturation={discordSaturation}
                         hasTintedText={tintedText}
@@ -162,18 +171,14 @@ export default function ({
                         accentColor
                     )[preset].preset(discordSaturation) as { full: string, base: string }).base})}` : ""}
                 />
-            </Modals.ModalContent>
-            <Modals.ModalFooter>
+            </ModalContent>
+            <ModalFooter>
                 <Button
                     style={{ marginLeft: 8 }}
                     color={Button.Colors.BRAND}
                     size={Button.Sizes.MEDIUM}
                     look={Button.Looks.FILLED}
                     onClick={e => {
-                        setNameError("");
-                        if(colorwayNames.includes(colorwayName)) {
-                            return setNameError("Error: A colorway with that name already exists");
-                        }
                         var customColorwayCSS: string = "";
                         if (preset === "default") {
                             customColorwayCSS = generateCss(
@@ -182,24 +187,32 @@ export default function ({
                                 tertiaryColor,
                                 accentColor,
                                 tintedText,
-                                discordSaturation
+                                discordSaturation,
+                                mutedTextBrightness,
+                                (colorwayName || "Colorway")
                             );
                         } else {
-                            (gradientPresetIds.includes(getPreset()[preset].id)) ?
-                                customColorwayCSS = (getPreset(
-                                    primaryColor,
-                                    secondaryColor,
-                                    tertiaryColor,
-                                    accentColor
-                                )[preset].preset(discordSaturation) as { full: string, base: string }).full : customColorwayCSS = getPreset(
-                                    primaryColor,
-                                    secondaryColor,
-                                    tertiaryColor,
-                                    accentColor
-                                )[preset].preset(discordSaturation) as string;
+                            gradientPresetIds.includes(getPreset()[preset].id) ?
+                                customColorwayCSS = `/**
+                                * @name ${colorwayName || "Colorway"}
+                                * @version ${plugin.creatorVersion}
+                                * @description Automatically generated Colorway.
+                                * @author ${UserStore.getCurrentUser().username}
+                                * @authorId ${UserStore.getCurrentUser().id}
+                                * @preset Gradient
+                                */
+                               ${(getPreset(primaryColor, secondaryColor, tertiaryColor, accentColor)[preset].preset(discordSaturation) as { full: string; }).full}` : customColorwayCSS = `/**
+                               * @name ${colorwayName || "Colorway"}
+                               * @version ${plugin.creatorVersion}
+                               * @description Automatically generated Colorway.
+                               * @author ${UserStore.getCurrentUser().username}
+                               * @authorId ${UserStore.getCurrentUser().id}
+                               * @preset ${getPreset()[preset].name}
+                               */
+                               ${(getPreset(primaryColor, secondaryColor, tertiaryColor, accentColor)[preset].preset(discordSaturation) as string)}`;
                         }
                         const customColorway: Colorway = {
-                            name: (colorwayName || "Colorway") + (preset === "default" ? "" : ": Made for " + getPreset()[preset].name),
+                            name: (colorwayName || "Colorway"),
                             "dc-import": customColorwayCSS,
                             accent: "#" + accentColor,
                             primary: "#" + primaryColor,
@@ -214,19 +227,14 @@ export default function ({
                                 secondaryColor,
                                 tertiaryColor,
                                 accentColor
-                            )[preset].preset(discordSaturation) as { full: string, base: string }).base : ""
+                            )[preset].preset(discordSaturation) as { base: string; }).base : "",
+                            preset: getPreset()[preset].id,
+                            creatorVersion: plugin.creatorVersion
                         };
-                        const customColorwaysArray: Colorway[] = [customColorway];
-                        Data.load("custom_colorways").forEach(
-                            (color: Colorway) => {
-                                if (color.name !== customColorway.name) {
-                                    customColorwaysArray.push(color);
-                                }
-                            }
-                        );
-                        Data.save("custom_colorways", customColorwaysArray);
-                        modalProps.onClose();
-                        loadUIProps!();
+                        openModal(props => <SaveColorwayModal modalProps={props} colorways={[customColorway]} onFinish={() => {
+                            modalProps.onClose();
+                            loadUIProps!();
+                        }} />);
                     }}
                 >Finish</Button>
                 <Button
@@ -248,7 +256,7 @@ export default function ({
                             }
                         });
                         if (copiedThemes.length > 1) {
-                            Modals.openModal((props: any) => <ConflictingColorsModal modalProps={props} onFinished={setAllColors} />);
+                            openModal((props: any) => <ConflictingColorsModal modalProps={props} onFinished={setAllColors} />);
                         } else {
                             setPrimaryColor(
                                 getHex(
@@ -288,7 +296,7 @@ export default function ({
                     color={Button.Colors.PRIMARY}
                     size={Button.Sizes.MEDIUM}
                     look={Button.Looks.OUTLINED}
-                    onClick={() => Modals.openModal((props: any) => <InputColorwayIdModal modalProps={props} onColorwayId={colorwayID => {
+                    onClick={() => openModal((props: any) => <InputColorwayIdModal modalProps={props} onColorwayId={colorwayID => {
                         const setColor = [
                             setAccentColor,
                             setPrimaryColor,
@@ -311,7 +319,7 @@ export default function ({
                 >
                     Cancel
                 </Button>
-            </Modals.ModalFooter>
-        </Modals.ModalRoot>
+            </ModalFooter>
+        </ModalRoot>
     );
 }

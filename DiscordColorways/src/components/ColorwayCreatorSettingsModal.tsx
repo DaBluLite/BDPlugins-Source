@@ -1,5 +1,4 @@
-import { radioBar, radioBarItem, radioBarItemFilled, radioPositionLeft, Button, Forms, Modals, ScrollerThin, Switch, Text } from "../../../common";
-import type { ModalProps } from "../../../global";
+import { radioBar, radioBarItem, radioBarItemFilled, radioPositionLeft, Button, Forms, Modals, ScrollerThin, Switch, Text, ModalContent, ModalFooter, ModalHeader, ModalRoot } from "../../../common";
 import { getPreset } from "../css";
 import { useState } from "react";
 
@@ -7,9 +6,9 @@ export default function ({ modalProps, onSettings, presetId, hasTintedText, hasD
     const [tintedText, setTintedText] = useState<boolean>(hasTintedText);
     const [discordSaturation, setDiscordSaturation] = useState<boolean>(hasDiscordSaturation);
     const [preset, setPreset] = useState<string>(presetId);
-    return <Modals.ModalRoot {...modalProps} className="colorwaysPresetPicker">
-        <Modals.ModalHeader><Text variant="heading-lg/semibold" tag="h1">Creator Settings</Text></Modals.ModalHeader>
-        <Modals.ModalContent className="colorwaysPresetPicker-content">
+    return <ModalRoot {...modalProps} className="colorwaysPresetPicker">
+        <ModalHeader><Text variant="heading-lg/semibold" tag="h1">Creator Settings</Text></ModalHeader>
+        <ModalContent className="colorwaysPresetPicker-content">
                 <Forms.FormTitle>Presets:</Forms.FormTitle>
                 <ScrollerThin orientation="vertical" paddingFix style={{ paddingRight: "2px", marginBottom: "20px", maxHeight: "250px" }}>
                     {Object.values(getPreset()).map(pre => {
@@ -31,8 +30,8 @@ export default function ({ modalProps, onSettings, presetId, hasTintedText, hasD
                 </ScrollerThin>
             <Switch value={tintedText} onChange={setTintedText}>Use colored text</Switch>
             <Switch value={discordSaturation} onChange={setDiscordSaturation} hideBorder style={{ marginBottom: "0" }}>Use Discord's saturation</Switch>
-        </Modals.ModalContent>
-        <Modals.ModalFooter>
+        </ModalContent>
+        <ModalFooter>
             <Button
                 style={{ marginLeft: 8 }}
                 color={Button.Colors.BRAND_NEW}
@@ -55,6 +54,6 @@ export default function ({ modalProps, onSettings, presetId, hasTintedText, hasD
             >
                 Cancel
             </Button>
-        </Modals.ModalFooter>
-    </Modals.ModalRoot>
+        </ModalFooter>
+    </ModalRoot>
 }
