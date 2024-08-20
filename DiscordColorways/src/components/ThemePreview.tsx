@@ -1,7 +1,13 @@
-import { CloseIcon } from "./Icons";
-import { ModalRoot, Text, openModal } from "../../../common";
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2023 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
+import { CloseIcon } from "./Icons";
 import { HexToHSL } from "../utils";
+import { openModal } from "..";
+import { ModalProps } from "../types";
 
 export default function ThemePreview({
     accent,
@@ -41,12 +47,12 @@ export default function ThemePreview({
                                 if (isModal) {
                                     modalProps?.onClose();
                                 } else {
-                                    openModal((props: ModalProps) => <ModalRoot className="colorwaysPreview-modal" {...props}>
+                                    openModal((props: ModalProps) => <div className={`colorwaysPreview-modal ${props.transitionState == 2 ? "closing" : ""} ${props.transitionState == 4 ? "hidden" : ""}`}>
                                         <style>
                                             {previewCSS}
                                         </style>
                                         <ThemePreview accent={accent} primary={primary} secondary={secondary} tertiary={tertiary} isModal modalProps={props} />
-                                    </ModalRoot>);
+                                    </div>);
                                 }
                             }}
                         >
@@ -115,14 +121,12 @@ export default function ThemePreview({
                             "--primary-500-hsl": `${HexToHSL(primary)[0]} ${HexToHSL(primary)[1]}% ${Math.min(HexToHSL(primary)[2] + (3.6 * 3), 100)}%`
                         } as React.CSSProperties}
                     >
-                        <Text
-                            tag="div"
-                            variant="text-md/semibold"
-                            lineClamp={1}
-                            selectable={false}
-                        >
+                        <span style={{
+                            fontWeight: 700,
+                            color: "var(--text-normal)"
+                        }}>
                             Preview
-                        </Text>
+                        </span>
                     </div>
                 </div>
                 <div className="colorwayPreview-chat" style={{ background: `var(--dc-overlay-chat, ${primary})` }}>

@@ -1,16 +1,82 @@
-import { Patcher, Data, DOM } from "betterdiscord";
-import { hookFunctionComponent, getFiber, findOwner, queryTree, ColorwayCSS, Webpack, colorToHex, openModal, getSetting, saveSettings, ModalRoot, ModalContent, ModalHeader } from "../../common";
-import ColorwaysButton from "./components/ColorwaysButton";
+import { DOM, Patcher } from "betterdiscord";
+import { ColorwayCSS, getSetting, saveSettings, getBulkSetting, Webpack, Filters, forceUpdate, queryTree, hookFunctionComponent, findOwner, getFiber } from "../../common";
 import styles from "./style.css";
-import { Text, Filters } from "../../common";
-import CreatorModal from "./components/CreatorModal";
+import discordTheme from "./style.css";
 import Selector from "./components/Selector";
-import ColorPicker from "./components/ColorPicker";
-import AutoColorwaySelector from "./components/AutoColorwaySelector";
-import { getAutoPresets } from "./css";
-import { defaultColorwaySource } from "./constants";
-import SettingsModal, { SettingsTab } from "./components/SettingsModal";
-import ReactDOM from "react-dom";
+import SettingsPage from "./components/SettingsTabs/SettingsPage";
+import SourceManager from "./components/SettingsTabs/SourceManager";
+import OnDemandPage from "./components/SettingsTabs/OnDemandPage";
+import Store from "./components/SettingsTabs/Store";
+import defaultsLoader from "./defaultsLoader";
+import { closeWS, connect } from "./wsClient";
+import ColorwaysButton from "./components/ColorwaysButton";
+
+export { useStateFromStores, UserStore, openModal, ColorPicker, Slider, FluxDispatcher, Toasts } from "../../common";
+export type { FluxEvents } from "./types";
+
+export { useState, useEffect, useRef, useReducer, useCallback } from "react";
+
+export const DataStore = {
+    get: async (key: string) => {
+        return getSetting(key);
+    },
+    set: async (key: string, value: any) => {
+        saveSettings({ [key]: value })
+    },
+    getMany: async (keys: string[]) => {
+        return getBulkSetting(...keys);
+    }
+}
+
+export const PluginProps = {
+    pluginVersion: "6.0.0",
+    clientMod: "BetterDiscord",
+    UIVersion: "2.0.0",
+    creatorVersion: "1.20"
+};
+
+// Data.save("settings", Object.assign(
+//     {},
+//     {
+//         activeAutoPreset: null,
+//         showInGuildBar: false,
+//         onDemandWays: false,
+//         onDemandWaysTintedText: false,
+//         onDemandWaysDiscordSaturation: false,
+//         onDemandWaysOsAccentColor: false,
+//         isButtonThin: false,
+//         activeColorwayObject: nullColorwayObj,
+//         selectorViewMode: "grid",
+//         showLabelsInSelectorGridView: false,
+//         colorwaysPluginTheme: "discord"
+//     },
+//     Data.load("settings")
+// ));
+
+// if (getSetting("colorwayLists")) {
+//     if (typeof getSetting("colorwayLists")[0] === "string") {
+//         saveSettings({ colorwayLists: getSetting("colorwayLists").map((sourceURL: string, i: number) => {
+//             return { name: sourceURL === defaultColorwaySource ? "Project Colorway" : `Source #${i}`, url: sourceURL };
+//         }) });
+//     }
+// } else {
+//     saveSettings({ colorwayLists: [{
+//         name: "Project Colorway",
+//         url: defaultColorwaySource
+//     }] })
+// }
+
+// if (Data.load("custom_colorways")) {
+//     if(Data.load("custom_colorways").length > 0) {
+//         if(!Object.keys(Data.load("custom_colorways")[0]).includes("colorways")) {
+//             Data.save("custom_colorways", [{ name: "Custom", colorways: Data.load("custom_colorways") }]);
+//         }
+//     }
+// } else {
+//     Data.save("custom_colorways", []);
+// }
+
+defaultsLoader();
 
 const guildStyles = Webpack.getModule(Filters.byKeys("guilds", "base"), { searchExports: false, defaultExport: true });
 const treeStyles = Webpack.getModule(Filters.byKeys("tree", "scroller"), { searchExports: false, defaultExport: true });
@@ -52,47 +118,53 @@ const triggerRerender = async () => {
     }
 };
 
-Data.save("settings", Object.assign(
-    {},
-    {
-        activeAutoPreset: null,
-        showInGuildBar: false,
-        onDemandWays: false,
-        onDemandWaysTintedText: false,
-        onDemandWaysDiscordSaturation: false,
-        onDemandWaysOsAccentColor: false,
-        isButtonThin: false,
-        activeColorwayObject: { id: null, css: null, sourceType: null, source: null },
-        selectorViewMode: "grid",
-        showLabelsInSelectorGridView: false
-    },
-    Data.load("settings")
-));
-
-if (getSetting("colorwayLists")) {
-    if (typeof getSetting("colorwayLists")[0] === "string") {
-        saveSettings({ colorwayLists: getSetting("colorwayLists").map((sourceURL: string, i: number) => {
-            return { name: sourceURL === defaultColorwaySource ? "Project Colorway" : `Source #${i}`, url: sourceURL };
-        }) });
-    }
-} else {
-    saveSettings({ colorwayLists: [{
-        name: "Project Colorway",
-        url: defaultColorwaySource
-    }] })
-}
-
-if (Data.load("custom_colorways")) {
-    if (!Data.load("custom_colorways")[0].colorways) {
-        Data.save("custom_colorways", [{ name: "Custom", colorways: Data.load("custom_colorways") }]);
-    }
-} else {
-    Data.save("custom_colorways", []);
-}
-
 export default class DiscordColorways {
     load() { }
+    settingsSection = [
+        {
+            section: "DIVIDER"
+        },
+        {
+            section: "HEADER",
+            label: "Discord Colorways",
+            className: "vc-settings-header"
+        },
+        {
+            section: "ColorwaysSelector",
+            label: "Colorways",
+            element: () => <Selector hasTheme />,
+            className: "dc-colorway-selector"
+        },
+        {
+            section: "ColorwaysSettings",
+            label: "Settings",
+            element: () => <SettingsPage hasTheme />,
+            className: "dc-colorway-settings"
+        },
+        {
+            section: "ColorwaysSourceManager",
+            label: "Sources",
+            element: () => <SourceManager hasTheme />,
+            className: "dc-colorway-sources-manager"
+        },
+        {
+            section: "ColorwaysOnDemand",
+            label: "On-Demand",
+            element: () => <OnDemandPage hasTheme />,
+            className: "dc-colorway-ondemand"
+        },
+        {
+            section: "ColorwaysStore",
+            label: "Store",
+            element: () => <Store hasTheme />,
+            className: "dc-colorway-store"
+        }
+    ]
     async start() {
+        DOM.addStyle(styles);
+        DOM.addStyle(discordTheme);
+        ColorwayCSS.set(getSetting("activeColorwayObject").css);
+
         Patcher.after(
             GuildsNav,
             "type",
@@ -117,67 +189,29 @@ export default class DiscordColorways {
         );
         DOM.addStyle(styles);
         triggerRerender();
-        ColorwayCSS.set(getSetting("activeColorwayObject").css);
-    }
-    getToolboxActions() {
-        return {
-            "Change Colorway": () => openModal((props: ModalProps) => <Selector modalProps={props} />),
-            "Open Colorway Creator": () => openModal((props: ModalProps) => <CreatorModal modalProps={props} />),
-            "Open Color Stealer": () => openModal((props: ModalProps) => <ColorPicker modalProps={props} />),
-            "Open Settings": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
-                <ModalHeader separator={false}>
-                    <Text variant="heading-lg/semibold" tag="h1">
-                        Settings
-                    </Text>
-                </ModalHeader>
-                <ModalContent><SettingsModal/></ModalContent>
-            </ModalRoot>),
-            "Open On-Demand Settings": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
-                <ModalHeader separator={false}>
-                    <Text variant="heading-lg/semibold" tag="h1">
-                        Settings
-                    </Text>
-                </ModalHeader>
-                <ModalContent><SettingsModal tab={SettingsTab.OnDemand}/></ModalContent>
-            </ModalRoot>),
-            "Manage Colorway Sources": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
-                <ModalHeader separator={false}>
-                    <Text variant="heading-lg/semibold" tag="h1">
-                        Settings
-                    </Text>
-                </ModalHeader>
-                <ModalContent><SettingsModal tab={SettingsTab.Sources}/></ModalContent>
-            </ModalRoot>),
-            "Open Colorway Store": () => openModal((props: ModalProps) => <ModalRoot {...props} size="medium">
-                <ModalHeader separator={false}>
-                    <Text variant="heading-lg/semibold" tag="h1">
-                        Settings
-                    </Text>
-                </ModalHeader>
-                <ModalContent><SettingsModal tab={SettingsTab.Store}/></ModalContent>
-            </ModalRoot>),
-            "Change Auto Colorway Preset": async () => {
-                openModal((props: ModalProps) => <AutoColorwaySelector modalProps={props} onChange={autoPresetId => {
-                    if (getSetting("activeColorwayObject").id === "Auto") {
-                        const demandedColorway = getAutoPresets(colorToHex(getComputedStyle(document.body).getPropertyValue("--os-accent-color")))[autoPresetId].preset();
-                        saveSettings({ activeColorwayObject: { id: "Auto", css: demandedColorway, sourceType: "online", source: null } });
-                        ColorwayCSS.set(demandedColorway);
-                    }
-                }} />);
-            }
-        }
-    };
-    getSettingsPanel() {
-        const elem = document.createElement("div");
 
-        ReactDOM.render(<SettingsModal/>, elem);
+        // forceUpdate();
 
-        return elem
+        // const UserSettings = await Webpack.getLazy(Filters.byPrototypeKeys("getPredicateSections"));
+
+        // Patcher.after(UserSettings.prototype, "getPredicateSections", (thisObject, args, returnValue) => {
+        //     let location = returnValue.findIndex(({ section }: { section: string }) => section.toLowerCase() == "billing") + 1;
+        //     if (location < 0) return;
+        //     const insert = (section: {}) => {
+        //         returnValue.splice(location, 0, section);
+        //         location++;
+        //     };
+        //     for (const section of this.settingsSection) {
+        //         insert(section);
+        //     }
+        // });
+
+        connect();
     }
     stop() {
         ColorwayCSS.remove();
         DOM.removeStyle();
-        Patcher.unpatchAll();
-        triggerRerender();
+        // Patcher.unpatchAll();
+        closeWS();
     }
 };

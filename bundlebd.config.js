@@ -5,5 +5,7 @@ module.exports = defineConfig((plugin, dev) => ({
 	output: `${plugin}/dist`,
 	importAliases: {
 		"@common/*": "/common/*",
-	}
+	},
+	bdPath: "/home/dablulite/.config/BetterDiscord",
+	moduleComments: false
 }));

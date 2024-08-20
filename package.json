@@ -7,8 +7,8 @@
     "bundlebd": "^4.0.0"
   },
   "scripts": {
-    "build": "bundlebd --module-comments false --plugin DiscordColorways && bundlebd --module-comments false --plugin CSSUtils && bundlebd --module-comments false --plugin BDToolbox",
-    "build:dc": "bundlebd --module-comments false --plugin DiscordColorways"
+    "build": "bundlebd --plugin DiscordColorways && bundlebd --plugin CSSUtils && bundlebd --plugin BDToolbox",
+    "build:dc": "bundlebd --plugin DiscordColorways"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

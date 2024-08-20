@@ -1015,3 +1015,43 @@ export function getSetting(setting: string) {
 export function getBulkSetting(...settings: string[]) {
   return settings.map(setting => Data.load("settings")[setting]);
 }
+
+export function forceUpdate(className: string) {
+  const node = document.querySelector(`.${className}`);
+  if (!node) return;
+  const stateNode = findInTree(getInternalInstance(node), (m: { getPredicateSections: any; }) => m && m.getPredicateSections, {walkable: ["return", "stateNode"]});
+  if (stateNode) stateNode.forceUpdate();
+}
+
+function getInternalInstance(node) {
+  if (node.__reactFiber$) return node.__reactFiber$;
+  return node[Object.keys(node).find(k => k.startsWith("__reactInternalInstance") || k.startsWith("__reactFiber"))] || null;
+}
+
+function findInTree(tree: { [x: string]: any; hasOwnProperty?: any; } | null, searchFilter: string | number, {walkable = null, ignore = []} = {}) {
+  if (typeof searchFilter === "string") {
+      if (tree.hasOwnProperty(searchFilter)) return tree[searchFilter];
+  }
+  else if (searchFilter(tree)) {
+      return tree;
+  }
+
+  if (typeof tree !== "object" || tree == null) return undefined;
+
+  let tempReturn;
+  if (tree instanceof Array) {
+      for (const value of tree) {
+          tempReturn = findInTree(value, searchFilter, {walkable, ignore});
+          if (typeof tempReturn != "undefined") return tempReturn;
+      }
+  }
+  else {
+      const toWalk = walkable == null ? Object.keys(tree) : walkable;
+      for (const key of toWalk) {
+          if (typeof(tree[key]) == "undefined" || ignore.includes(key)) continue;
+          tempReturn = findInTree(tree[key], searchFilter, {walkable, ignore});
+          if (typeof tempReturn != "undefined") return tempReturn;
+      }
+  }
+  return tempReturn;
+}

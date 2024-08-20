@@ -1,21 +1,35 @@
-import { FluxDispatcher, Modals, Text, Tooltip, getSetting, openModal } from "../../../common";
-import { useState } from "react";
-import { Data } from "betterdiscord";
-import Selector from "./Selector";
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2023 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { PalleteIcon } from "./Icons";
-import type { FluxEvents } from "../../../FluxEvents";
+
 import { getAutoPresets } from "../css";
+import { ColorwayObject } from "../types";
+import Selector from "./MainModal";
+import { DataStore, useEffect, useState, FluxDispatcher, FluxEvents, openModal, PluginProps } from "..";
+import Tooltip from "./Tooltip";
 
-export default function() {
+export default function () {
     const [activeColorway, setActiveColorway] = useState<string>("None");
-    const [visibility, setVisibility] = useState<boolean>(Data.load("settings").showInGuildBar);
-    const [isThin, setIsThin] = useState<boolean>(Data.load("settings").isButtonThin);
+    const [visibility, setVisibility] = useState<boolean>(true);
+    const [isThin, setIsThin] = useState<boolean>(false);
+    const [autoPreset, setAutoPreset] = useState<string>("hueRotation");
+    useEffect(() => {
+        (async function () {
+            setVisibility(await DataStore.get("showColorwaysButton") as boolean);
+            setIsThin(await DataStore.get("useThinMenuButton") as boolean);
+            setAutoPreset(await DataStore.get("activeAutoPreset") as string);
+        })();
+    });
 
-    FluxDispatcher.subscribe("COLORWAYS_UPDATE_BUTTON_HEIGHT" as FluxEvents, ({ isTall }: {isTall: boolean }) => {
+    FluxDispatcher.subscribe("COLORWAYS_UPDATE_BUTTON_HEIGHT" as FluxEvents, ({ isTall }) => {
         setIsThin(isTall);
     });
 
-    FluxDispatcher.subscribe("COLORWAYS_UPDATE_BUTTON_VISIBILITY" as FluxEvents, ({ isVisible }: {isVisible: boolean }) => {
+    FluxDispatcher.subscribe("COLORWAYS_UPDATE_BUTTON_VISIBILITY" as FluxEvents, ({ isVisible }) => {
         setVisibility(isVisible);
     });
 
@@ -23,25 +37,26 @@ export default function() {
         <>
             {!isThin ? <>
                 <span>Colorways</span>
-                <Text variant="text-xs/normal" style={{ color: "var(--text-muted)", fontWeight: 500 }}>{"Active Colorway: " + activeColorway}</Text>
+                <span style={{ color: "var(--text-muted)", fontWeight: 500, fontSize: 12 }}>{"Active Colorway: " + activeColorway}</span>
             </> : <span>{"Active Colorway: " + activeColorway}</span>}
-            {getSetting("activeColorwayObject").id === "Auto" ? <Text variant="text-xs/normal" style={{ color: "var(--text-muted)", fontWeight: 500 }}>{"Auto Preset: " + getAutoPresets()[Data.load("settings").activeAutoPreset].name}</Text> : <></>}
+            {activeColorway === "Auto" ? <span style={{ color: "var(--text-muted)", fontWeight: 500, fontSize: 12 }}>{"Auto Preset: " + (getAutoPresets()[autoPreset].name || "None")}</span> : <></>}
         </>
-    } position="right" tooltipContentClassName="colorwaysBtn-tooltipContent"
+    } position="right"
     >
-        {({ onMouseEnter, onMouseLeave, onClick }) => visibility ? <div className="ColorwaySelectorBtnContainer">
+        {({ onMouseEnter, onMouseLeave, onClick }) => (visibility || PluginProps.clientMod === "BetterDiscord") ? <div className="ColorwaySelectorBtnContainer">
             <div
                 className={"ColorwaySelectorBtn" + (isThin ? " ColorwaySelectorBtn_thin" : "")}
-                onMouseEnter={() => {
+                onMouseEnter={async () => {
                     onMouseEnter();
-                    setActiveColorway(getSetting("activeColorwayObject").id || "None");
+                    setActiveColorway((await DataStore.get("activeColorwayObject") as ColorwayObject).id || "None");
+                    setAutoPreset(await DataStore.get("activeAutoPreset") as string);
                 }}
                 onMouseLeave={onMouseLeave}
                 onClick={() => {
                     onClick();
                     openModal((props: any) => <Selector modalProps={props} />);
                 }}
-            >{isThin ? <Text variant="text-xs/normal" style={{ color: "var(--header-primary)", fontWeight: 700, fontSize: 9 }}>Colorways</Text> : <PalleteIcon />}</div>
+            >{isThin ? <span style={{ color: "var(--header-primary)", fontWeight: 700, fontSize: 9 }}>Colorways</span> : <PalleteIcon />}</div>
         </div> : <></>}
-    </Tooltip>
+    </Tooltip>;
 }

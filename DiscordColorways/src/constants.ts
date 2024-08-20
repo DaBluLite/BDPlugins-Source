@@ -1,15 +1,12 @@
-export const defaultColorwaySource = "https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json";
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2023 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
-export const knownColorwaySources = [
-    {
-        name: "Project Colorway",
-        url: "https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json"
-    },
-    {
-        name: "DaBluLite's Personal Colorways",
-        url: "https://raw.githubusercontent.com/DaBluLite/dablulite.github.io/master/colorways/index.json"
-    }
-];
+import { ColorwayObject } from "./types";
+
+export const defaultColorwaySource = "https://raw.githubusercontent.com/ProjectColorway/ProjectColorway/master/index.json";
 
 export const fallbackColorways = [
     {
@@ -316,3 +313,5 @@ export const mainColors = [
     { name: "secondary", title: "Secondary", var: "--background-secondary" },
     { name: "tertiary", title: "Tertiary", var: "--background-tertiary" }
 ];
+
+export const nullColorwayObj: ColorwayObject = { id: null, css: null, sourceType: null, source: null };
