@@ -44,14 +44,8 @@ export default function ({
             setTheme(await DataStore.get("colorwaysPluginTheme") as string);
         }
         load();
-        updateWS = (status) => {
-            setWsConnected(status);
-        };
-        console.log(hasManagerRole);
-        updateManagerRole = (hasManager) => {
-            setManager(hasManager);
-            console.log(hasManager);
-        };
+        updateWS = setWsConnected;
+        updateManagerRole = setManager;
         updateActiveColorway = setActiveColorwayObject;
         return () => {
             updateWS = () => { };

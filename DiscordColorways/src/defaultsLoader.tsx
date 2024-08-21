@@ -87,8 +87,8 @@ export default async function () {
         if (!value) DataStore.set(name, def);
     });
 
-    if (customColorways) {
-        if (!customColorways[0].colorways) {
+    if (customColorways && Array.isArray(customColorways) && customColorways.length) {
+        if (typeof customColorways[0] !== "object" || !Object.keys(customColorways[0]).includes("colorways")) {
             DataStore.set("customColorways", [{ name: "Custom", colorways: customColorways }]);
         }
     } else {

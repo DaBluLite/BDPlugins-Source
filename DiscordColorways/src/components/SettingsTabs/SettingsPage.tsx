@@ -33,7 +33,7 @@ export default function ({
     useEffect(() => {
         async function load() {
             setTheme(await DataStore.get("colorwaysPluginTheme") as string);
-            setShouldAutoconnect(await DataStore.get("colorwaysManagerDoAutoconnect") as "1" | "2");
+            setShouldAutoconnect((await DataStore.get("colorwaysManagerDoAutoconnect") as boolean) ? "1" : "2");
         }
         load();
     }, []);
@@ -100,10 +100,10 @@ export default function ({
                 <select
                     className="colorwaysPillButton"
                     style={{ border: "none" }}
-                    onChange={e => {
-                        setTheme(e.currentTarget.value);
-                        DataStore.set("colorwaysPluginTheme", e.currentTarget.value);
-                        changeTheme(e.currentTarget.value);
+                    onChange={({ currentTarget: { value } }) => {
+                        setTheme(value);
+                        DataStore.set("colorwaysPluginTheme", value);
+                        changeTheme(value);
                     }}
                     value={theme}
                 >
@@ -128,11 +128,10 @@ export default function ({
                     onChange={({ currentTarget: { value } }) => {
                         if (value == "1") {
                             DataStore.set("colorwaysManagerDoAutoconnect", true);
-                            updateShouldAutoconnect(true);
                         } else {
                             DataStore.set("colorwaysManagerDoAutoconnect", false);
-                            updateShouldAutoconnect(false);
                         }
+                        updateShouldAutoconnect(value);
                     }}
                     value={shouldAutoconnect}
                 >

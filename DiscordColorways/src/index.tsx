@@ -1,7 +1,7 @@
 import { DOM, Patcher } from "betterdiscord";
-import { ColorwayCSS, getSetting, saveSettings, getBulkSetting, Webpack, Filters, forceUpdate, queryTree, hookFunctionComponent, findOwner, getFiber } from "../../common";
+import { ColorwayCSS, getSetting, saveSettings, getBulkSetting, Webpack, Filters, queryTree, hookFunctionComponent, findOwner, getFiber } from "../../common";
 import styles from "./style.css";
-import discordTheme from "./style.css";
+import discordTheme from "./theme.discord.css";
 import Selector from "./components/Selector";
 import SettingsPage from "./components/SettingsTabs/SettingsPage";
 import SourceManager from "./components/SettingsTabs/SourceManager";
@@ -9,7 +9,7 @@ import OnDemandPage from "./components/SettingsTabs/OnDemandPage";
 import Store from "./components/SettingsTabs/Store";
 import defaultsLoader from "./defaultsLoader";
 import { closeWS, connect } from "./wsClient";
-import ColorwaysButton from "./components/ColorwaysButton";
+import ColorwaysButton, { isMounted } from "./components/ColorwaysButton";
 
 export { useStateFromStores, UserStore, openModal, ColorPicker, Slider, FluxDispatcher, Toasts } from "../../common";
 export type { FluxEvents } from "./types";
@@ -29,7 +29,7 @@ export const DataStore = {
 }
 
 export const PluginProps = {
-    pluginVersion: "6.0.0",
+    pluginVersion: "6.1.0",
     clientMod: "BetterDiscord",
     UIVersion: "2.0.0",
     creatorVersion: "1.20"
@@ -187,7 +187,7 @@ export default class DiscordColorways {
                 });
             }
         );
-        DOM.addStyle(styles);
+        DOM.addStyle(styles + discordTheme);
         triggerRerender();
 
         // forceUpdate();
@@ -211,7 +211,7 @@ export default class DiscordColorways {
     stop() {
         ColorwayCSS.remove();
         DOM.removeStyle();
-        // Patcher.unpatchAll();
+        Patcher.unpatchAll();
         closeWS();
     }
 };

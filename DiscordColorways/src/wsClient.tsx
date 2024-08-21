@@ -16,7 +16,9 @@ export let requestManagerRole: () => void = () => { };
 export let updateRemoteSources: () => void = () => { };
 export let closeWS: () => void = () => { };
 export let restartWS: () => void = () => connect();
-export let updateShouldAutoconnect: (shouldAutoconnect: boolean) => void = () => connect();
+export let updateShouldAutoconnect: (shouldAutoconnect: boolean) => void = (shouldAutoconnect) => {
+    if (shouldAutoconnect) connect();
+};
 
 function updateWS(status: boolean) {
     updateWSSelector(status);
@@ -28,7 +30,7 @@ function updateBoundKey(bound: { [managerKey: string]: string; }) {
 }
 
 export function connect() {
-    var ws: WebSocket | null = new WebSocket('ws://localhost:6124');
+    let ws: WebSocket | null = new WebSocket('ws://localhost:6124');
 
     updateShouldAutoconnect = (shouldAutoconnect) => {
         if (shouldAutoconnect && ws?.readyState == ws?.CLOSED) connect();
@@ -44,7 +46,30 @@ export function connect() {
         ws?.close();
         connect();
     };
-    closeWS = () => ws?.close();
+    closeWS = () => {
+        ws.onclose = function (e) {
+            boundKey = null;
+            hasManagerRole = false;
+            sendColorway = () => { };
+            requestManagerRole = () => { };
+            updateRemoteSources = () => { };
+            restartWS = () => connect();
+            closeWS = () => { };
+            updateShouldAutoconnect = (shouldAutoconnect) => {
+                if (shouldAutoconnect) connect();
+            };
+            try {
+                (ws as WebSocket).close();
+            } catch (e) {
+                return;
+            }
+            ws = null;
+            wsOpen = false;
+            updateWS(false);
+        };
+
+        ws?.close();
+    };
 
     ws.onmessage = function (e) {
         const data: {
@@ -180,6 +205,9 @@ export function connect() {
         updateRemoteSources = () => { };
         restartWS = () => connect();
         closeWS = () => { };
+        updateShouldAutoconnect = (shouldAutoconnect) => {
+            if (shouldAutoconnect) connect();
+        };
         try {
             (ws as WebSocket).close();
         } catch (e) {
@@ -207,6 +235,9 @@ export function connect() {
         updateRemoteSources = () => { };
         restartWS = () => connect();
         closeWS = () => { };
+        updateShouldAutoconnect = (shouldAutoconnect) => {
+            if (shouldAutoconnect) connect();
+        };
         hasManagerRole = false;
         (ws as WebSocket).close();
         ws = null;
