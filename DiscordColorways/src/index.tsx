@@ -5,11 +5,10 @@ import discordTheme from "./theme.discord.css";
 import Selector from "./components/Selector";
 import SettingsPage from "./components/SettingsTabs/SettingsPage";
 import SourceManager from "./components/SettingsTabs/SourceManager";
-import OnDemandPage from "./components/SettingsTabs/OnDemandPage";
 import Store from "./components/SettingsTabs/Store";
 import defaultsLoader from "./defaultsLoader";
 import { closeWS, connect } from "./wsClient";
-import ColorwaysButton, { isMounted } from "./components/ColorwaysButton";
+import ColorwaysButton from "./components/ColorwaysButton";
 
 export { useStateFromStores, UserStore, openModal, ColorPicker, Slider, FluxDispatcher, Toasts } from "../../common";
 export type { FluxEvents } from "./types";
@@ -29,9 +28,9 @@ export const DataStore = {
 }
 
 export const PluginProps = {
-    pluginVersion: "6.1.0",
+    pluginVersion: "6.2.0",
     clientMod: "BetterDiscord",
-    UIVersion: "2.0.0",
+    UIVersion: "2.1.0",
     creatorVersion: "1.20"
 };
 
@@ -148,12 +147,6 @@ export default class DiscordColorways {
             className: "dc-colorway-sources-manager"
         },
         {
-            section: "ColorwaysOnDemand",
-            label: "On-Demand",
-            element: () => <OnDemandPage hasTheme />,
-            className: "dc-colorway-ondemand"
-        },
-        {
             section: "ColorwaysStore",
             label: "Store",
             element: () => <Store hasTheme />,
@@ -206,7 +199,9 @@ export default class DiscordColorways {
         //     }
         // });
 
-        connect();
+        const [colorwaysManagerAutoconnectPeriod, colorwaysManagerDoAutoconnect] = getBulkSetting("colorwaysManagerAutoconnectPeriod", "colorwaysManagerDoAutoconnect");
+
+        connect(colorwaysManagerDoAutoconnect, colorwaysManagerAutoconnectPeriod);
     }
     stop() {
         ColorwayCSS.remove();

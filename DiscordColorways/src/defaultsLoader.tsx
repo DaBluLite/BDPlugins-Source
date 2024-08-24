@@ -6,10 +6,6 @@ export default async function () {
         customColorways,
         colorwaySourceFiles,
         showColorwaysButton,
-        onDemandWays,
-        onDemandWaysTintedText,
-        onDemandWaysDiscordSaturation,
-        onDemandWaysOsAccentColor,
         activeColorwayObject,
         colorwaysPluginTheme,
         colorwaysBoundManagers,
@@ -19,10 +15,6 @@ export default async function () {
         "customColorways",
         "colorwaySourceFiles",
         "showColorwaysButton",
-        "onDemandWays",
-        "onDemandWaysTintedText",
-        "onDemandWaysDiscordSaturation",
-        "onDemandWaysOsAccentColor",
         "activeColorwayObject",
         "colorwaysPluginTheme",
         "colorwaysBoundManagers",
@@ -44,26 +36,6 @@ export default async function () {
         {
             name: "showColorwaysButton",
             value: showColorwaysButton,
-            default: false
-        },
-        {
-            name: "onDemandWays",
-            value: onDemandWays,
-            default: false
-        },
-        {
-            name: "onDemandWaysTintedText",
-            value: onDemandWaysTintedText,
-            default: true
-        },
-        {
-            name: "onDemandWaysDiscordSaturation",
-            value: onDemandWaysDiscordSaturation,
-            default: false
-        },
-        {
-            name: "onDemandWaysOsAccentColor",
-            value: onDemandWaysOsAccentColor,
             default: false
         },
         {
