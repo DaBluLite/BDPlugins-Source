@@ -36,9 +36,16 @@ interface OfflineSourceObject {
 }
 interface ColorwayObject {
     id: string | null,
-    css: string | null,
+    css?: string | null,
     sourceType: "online" | "offline" | "temporary" | null,
-    source: string | null | undefined;
+    source: string | null | undefined,
+    colors: {
+        accent: string,
+        primary: string,
+        secondary: string,
+        tertiary: string;
+    },
+    linearGradient?: string;
 }
 
 interface SourceObject {

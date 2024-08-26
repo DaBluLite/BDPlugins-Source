@@ -1,5 +1,5 @@
 import { DOM, Patcher } from "betterdiscord";
-import { ColorwayCSS, getSetting, saveSettings, getBulkSetting, Webpack, Filters, queryTree, hookFunctionComponent, findOwner, getFiber } from "../../common";
+import { ColorwayCSS, getSetting, saveSettings, getBulkSetting, Webpack, Filters, queryTree, hookFunctionComponent, findOwner, getFiber, openModal } from "../../common";
 import styles from "./style.css";
 import discordTheme from "./theme.discord.css";
 import Selector from "./components/Selector";
@@ -9,6 +9,10 @@ import Store from "./components/SettingsTabs/Store";
 import defaultsLoader from "./defaultsLoader";
 import { closeWS, connect } from "./wsClient";
 import ColorwaysButton from "./components/ColorwaysButton";
+import { generateCss, getPreset, gradientBase, gradientPresetIds } from "./css";
+import { colorToHex } from "./utils";
+import { defaultColorwaySource } from "./constants";
+import PCSMigrationModal from "./components/PCSMigrationModal";
 
 export { useStateFromStores, UserStore, openModal, ColorPicker, Slider, FluxDispatcher, Toasts } from "../../common";
 export type { FluxEvents } from "./types";
@@ -28,7 +32,7 @@ export const DataStore = {
 }
 
 export const PluginProps = {
-    pluginVersion: "6.2.0",
+    pluginVersion: "6.3.0",
     clientMod: "BetterDiscord",
     UIVersion: "2.1.0",
     creatorVersion: "1.20"
@@ -199,9 +203,51 @@ export default class DiscordColorways {
         //     }
         // });
 
-        const [colorwaysManagerAutoconnectPeriod, colorwaysManagerDoAutoconnect] = getBulkSetting("colorwaysManagerAutoconnectPeriod", "colorwaysManagerDoAutoconnect");
+        const [
+            activeColorwayObject,
+            colorwaysManagerAutoconnectPeriod,
+            colorwaysManagerDoAutoconnect,
+            colorwaySourceFiles,
+            colorwaysPreset
+        ] = getBulkSetting(
+            "activeColorwayObject",
+            "colorwaysManagerAutoconnectPeriod",
+            "colorwaysManagerDoAutoconnect",
+            "colorwaySourceFiles",
+            "colorwaysPreset"
+        );
 
-        connect(colorwaysManagerDoAutoconnect, colorwaysManagerAutoconnectPeriod);
+        connect(colorwaysManagerDoAutoconnect as boolean, colorwaysManagerAutoconnectPeriod as number);
+
+        const active: ColorwayObject = activeColorwayObject;
+
+        if (active.id) {
+            if (colorwaysPreset == "default") {
+                ColorwayCSS.set(generateCss(
+                    active.colors,
+                    true,
+                    true,
+                    undefined,
+                    active.id
+                ));
+            } else {
+                if (gradientPresetIds.includes(colorwaysPreset)) {
+                    const css = Object.keys(active).includes("linearGradient")
+                        ? gradientBase(colorToHex(active.colors.accent), true) + `:root:root {--custom-theme-background: linear-gradient(${active.linearGradient})}`
+                        : (getPreset(active.colors)[colorwaysPreset].preset as { full: string; }).full;
+                    ColorwayCSS.set(css);
+                } else {
+                    ColorwayCSS.set(getPreset(active.colors)[colorwaysPreset].preset as string);
+                }
+            }
+        }
+
+        if ((colorwaySourceFiles as { name: string, url: string; }[]).map(i => i.url).includes("https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json") || (!(colorwaySourceFiles as { name: string, url: string; }[]).map(i => i.url).includes("https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json") && !(colorwaySourceFiles as { name: string, url: string; }[]).map(i => i.url).includes("https://raw.githubusercontent.com/ProjectColorway/ProjectColorway/master/index.json"))) {
+            saveSettings({
+                "colorwaySourceFiles": [{ name: "Project Colorway", url: defaultColorwaySource }, ...(colorwaySourceFiles as { name: string, url: string; }[]).filter(i => i.name !== "Project Colorway")]
+            });
+            openModal(props => <PCSMigrationModal modalProps={props} />);
+        }
     }
     stop() {
         ColorwayCSS.remove();
