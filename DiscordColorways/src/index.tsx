@@ -32,10 +32,10 @@ export const DataStore = {
 }
 
 export const PluginProps = {
-    pluginVersion: "6.3.0",
+    pluginVersion: "6.4.0",
     clientMod: "BetterDiscord",
     UIVersion: "2.1.0",
-    creatorVersion: "1.20"
+    creatorVersion: "1.21"
 };
 
 // Data.save("settings", Object.assign(
