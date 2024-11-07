@@ -1,85 +1,36 @@
-import { DOM, Patcher } from "betterdiscord";
-import { ColorwayCSS, getSetting, saveSettings, getBulkSetting, Webpack, Filters, queryTree, hookFunctionComponent, findOwner, getFiber, openModal } from "../../common";
+import { Data, DOM, Patcher } from "betterdiscord";
+import { ColorwayCSS, Webpack, Filters, queryTree, hookFunctionComponent, findOwner, getFiber } from "../../common";
 import styles from "./style.css";
 import discordTheme from "./theme.discord.css";
-import Selector from "./components/Selector";
-import SettingsPage from "./components/SettingsTabs/SettingsPage";
-import SourceManager from "./components/SettingsTabs/SourceManager";
-import Store from "./components/SettingsTabs/Store";
 import defaultsLoader from "./defaultsLoader";
 import { closeWS, connect } from "./wsClient";
 import ColorwaysButton from "./components/ColorwaysButton";
 import { generateCss, getPreset, gradientBase, gradientPresetIds } from "./css";
-import { colorToHex } from "./utils";
-import { defaultColorwaySource } from "./constants";
-import PCSMigrationModal from "./components/PCSMigrationModal";
+import { initContexts } from "./contexts";
 
-export { useStateFromStores, UserStore, openModal, ColorPicker, Slider, FluxDispatcher, Toasts } from "../../common";
+export { useStateFromStores, UserStore, openModal, Forms, FluxDispatcher, Toasts, ContextMenuApi, FocusLock, Popout } from "../../common";
 export type { FluxEvents } from "./types";
 
 export { useState, useEffect, useRef, useReducer, useCallback } from "react";
 
 export const DataStore = {
     get: async (key: string) => {
-        return getSetting(key);
+        return Data.load(key) || null;
     },
     set: async (key: string, value: any) => {
-        saveSettings({ [key]: value })
+        Data.save(key, value);
     },
     getMany: async (keys: string[]) => {
-        return getBulkSetting(...keys);
+        return keys.map(setting => Data.load(setting) || null);
     }
 }
 
 export const PluginProps = {
-    pluginVersion: "6.4.0",
+    pluginVersion: "7.0.0",
     clientMod: "BetterDiscord",
-    UIVersion: "2.1.0",
-    creatorVersion: "1.21"
+    UIVersion: "2.2.0",
+    creatorVersion: "1.23"
 };
-
-// Data.save("settings", Object.assign(
-//     {},
-//     {
-//         activeAutoPreset: null,
-//         showInGuildBar: false,
-//         onDemandWays: false,
-//         onDemandWaysTintedText: false,
-//         onDemandWaysDiscordSaturation: false,
-//         onDemandWaysOsAccentColor: false,
-//         isButtonThin: false,
-//         activeColorwayObject: nullColorwayObj,
-//         selectorViewMode: "grid",
-//         showLabelsInSelectorGridView: false,
-//         colorwaysPluginTheme: "discord"
-//     },
-//     Data.load("settings")
-// ));
-
-// if (getSetting("colorwayLists")) {
-//     if (typeof getSetting("colorwayLists")[0] === "string") {
-//         saveSettings({ colorwayLists: getSetting("colorwayLists").map((sourceURL: string, i: number) => {
-//             return { name: sourceURL === defaultColorwaySource ? "Project Colorway" : `Source #${i}`, url: sourceURL };
-//         }) });
-//     }
-// } else {
-//     saveSettings({ colorwayLists: [{
-//         name: "Project Colorway",
-//         url: defaultColorwaySource
-//     }] })
-// }
-
-// if (Data.load("custom_colorways")) {
-//     if(Data.load("custom_colorways").length > 0) {
-//         if(!Object.keys(Data.load("custom_colorways")[0]).includes("colorways")) {
-//             Data.save("custom_colorways", [{ name: "Custom", colorways: Data.load("custom_colorways") }]);
-//         }
-//     }
-// } else {
-//     Data.save("custom_colorways", []);
-// }
-
-defaultsLoader();
 
 const guildStyles = Webpack.getModule(Filters.byKeys("guilds", "base"), { searchExports: false, defaultExport: true });
 const treeStyles = Webpack.getModule(Filters.byKeys("tree", "scroller"), { searchExports: false, defaultExport: true });
@@ -123,45 +74,7 @@ const triggerRerender = async () => {
 
 export default class DiscordColorways {
     load() { }
-    settingsSection = [
-        {
-            section: "DIVIDER"
-        },
-        {
-            section: "HEADER",
-            label: "Discord Colorways",
-            className: "vc-settings-header"
-        },
-        {
-            section: "ColorwaysSelector",
-            label: "Colorways",
-            element: () => <Selector hasTheme />,
-            className: "dc-colorway-selector"
-        },
-        {
-            section: "ColorwaysSettings",
-            label: "Settings",
-            element: () => <SettingsPage hasTheme />,
-            className: "dc-colorway-settings"
-        },
-        {
-            section: "ColorwaysSourceManager",
-            label: "Sources",
-            element: () => <SourceManager hasTheme />,
-            className: "dc-colorway-sources-manager"
-        },
-        {
-            section: "ColorwaysStore",
-            label: "Store",
-            element: () => <Store hasTheme />,
-            className: "dc-colorway-store"
-        }
-    ]
-    async start() {
-        DOM.addStyle(styles);
-        DOM.addStyle(discordTheme);
-        ColorwayCSS.set(getSetting("activeColorwayObject").css);
-
+    start() {
         Patcher.after(
             GuildsNav,
             "type",
@@ -171,83 +84,47 @@ export default class DiscordColorways {
                     return console.error("Unable to find chain patch target");
                 }
                 hookFunctionComponent(target, (result: any) => {
-                    const scroller = queryTree(result, (node: { props: { className: string; }; }) => node?.props?.className?.split(" ").includes(treeStyles.scroller));
+                    const scroller = queryTree(result, (node: { props: any; }) => node?.props?.value?.includes("guilds list"));
                     if (!scroller) {
                         return console.error("Unable to find scroller");
                     }
                     const { children } = (scroller.props as any);
-                    children.splice(children.indexOf((children as []).filter((child: { [key: string]: any } | null | []) => {
-                        if (child !== null && !Array.isArray(child) && child.type && typeof child.type == "function" && (child.type as Function).toString().includes("guildSeparator")) {
-                            return true
-                        }
-                    })[0]) + 1, 0, <ColorwaysButton />);
+                    const Child = children.props.children();
+                    const list = Child.props.children.props.children.find((child: any) => child.props.className.includes(treeStyles.scroller)) as { props: { children: any[] } }
+                    console.log(list);
+                    list.props.children.splice(list.props.children.indexOf(list.props.children.filter(child => child !== null && typeof child.type === "string")[0]), 0, <ColorwaysButton/>);
+                    children.props.children = () => Child;
                 });
             }
         );
         DOM.addStyle(styles + discordTheme);
         triggerRerender();
+        defaultsLoader();
 
-        // forceUpdate();
+        connect();
 
-        // const UserSettings = await Webpack.getLazy(Filters.byPrototypeKeys("getPredicateSections"));
-
-        // Patcher.after(UserSettings.prototype, "getPredicateSections", (thisObject, args, returnValue) => {
-        //     let location = returnValue.findIndex(({ section }: { section: string }) => section.toLowerCase() == "billing") + 1;
-        //     if (location < 0) return;
-        //     const insert = (section: {}) => {
-        //         returnValue.splice(location, 0, section);
-        //         location++;
-        //     };
-        //     for (const section of this.settingsSection) {
-        //         insert(section);
-        //     }
-        // });
-
-        const [
-            activeColorwayObject,
-            colorwaysManagerAutoconnectPeriod,
-            colorwaysManagerDoAutoconnect,
-            colorwaySourceFiles,
-            colorwaysPreset
-        ] = getBulkSetting(
-            "activeColorwayObject",
-            "colorwaysManagerAutoconnectPeriod",
-            "colorwaysManagerDoAutoconnect",
-            "colorwaySourceFiles",
-            "colorwaysPreset"
-        );
-
-        connect(colorwaysManagerDoAutoconnect as boolean, colorwaysManagerAutoconnectPeriod as number);
-
-        const active: ColorwayObject = activeColorwayObject;
-
-        if (active.id) {
-            if (colorwaysPreset == "default") {
-                ColorwayCSS.set(generateCss(
-                    active.colors,
-                    true,
-                    true,
-                    undefined,
-                    active.id
-                ));
-            } else {
-                if (gradientPresetIds.includes(colorwaysPreset)) {
-                    const css = Object.keys(active).includes("linearGradient")
-                        ? gradientBase(colorToHex(active.colors.accent), true) + `:root:root {--custom-theme-background: linear-gradient(${active.linearGradient})}`
-                        : (getPreset(active.colors)[colorwaysPreset].preset as { full: string; }).full;
-                    ColorwayCSS.set(css);
+        initContexts().then(contexts => {
+            if (contexts.activeColorwayObject.id) {
+                if (contexts.colorwaysPreset === "default") {
+                    ColorwayCSS.set(generateCss(
+                        contexts.activeColorwayObject.colors,
+                        true,
+                        true,
+                        undefined,
+                        contexts.activeColorwayObject.id
+                    ));
                 } else {
-                    ColorwayCSS.set(getPreset(active.colors)[colorwaysPreset].preset as string);
+                    if (gradientPresetIds.includes(contexts.colorwaysPreset)) {
+                        const css = Object.keys(contexts.activeColorwayObject).includes("linearGradient")
+                            ? gradientBase(contexts.activeColorwayObject.colors, true) + `:root:root {--custom-theme-background: linear-gradient(${contexts.activeColorwayObject.linearGradient})}`
+                            : (getPreset(contexts.activeColorwayObject.colors)[contexts.colorwaysPreset].preset as { full: string; }).full;
+                        ColorwayCSS.set(css);
+                    } else {
+                        ColorwayCSS.set(getPreset(contexts.activeColorwayObject.colors)[contexts.colorwaysPreset].preset as string);
+                    }
                 }
             }
-        }
-
-        if ((colorwaySourceFiles as { name: string, url: string; }[]).map(i => i.url).includes("https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json") || (!(colorwaySourceFiles as { name: string, url: string; }[]).map(i => i.url).includes("https://raw.githubusercontent.com/DaBluLite/ProjectColorway/master/index.json") && !(colorwaySourceFiles as { name: string, url: string; }[]).map(i => i.url).includes("https://raw.githubusercontent.com/ProjectColorway/ProjectColorway/master/index.json"))) {
-            saveSettings({
-                "colorwaySourceFiles": [{ name: "Project Colorway", url: defaultColorwaySource }, ...(colorwaySourceFiles as { name: string, url: string; }[]).filter(i => i.name !== "Project Colorway")]
-            });
-            openModal(props => <PCSMigrationModal modalProps={props} />);
-        }
+        });
     }
     stop() {
         ColorwayCSS.remove();

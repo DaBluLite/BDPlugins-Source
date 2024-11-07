@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { Data, Webpack as Webpack$1 } from "betterdiscord";
+import { ContextMenu, Data, Webpack as Webpack$1 } from "betterdiscord";
 import type { ComponentType } from "react";
 import Spinner from "./DiscordColorways/src/components/Spinner";
 
@@ -1005,22 +1005,45 @@ export function getTheme(): Theme {
 }
 
 export function saveSettings(settings: { [key: string]: any }) {
-  Data.save("settings", { ...Data.load("settings"), ...settings });
+  Object.keys(settings).forEach((setting: string) => Data.save(setting, settings[setting]));
 }
 
 export function getSetting(setting: string) {
-  return Data.load("settings")[setting];
+  return Data.load(setting);
 }
 
 export function getBulkSetting(...settings: string[]) {
-  return settings.map(setting => Data.load("settings")[setting]);
+  return settings.map(setting => Data.load(setting));
 }
+
+export const ContextMenuApi = {
+  closeContextMenu: ContextMenu.close,
+  openContextMenu: ContextMenu.open
+};
 
 export function forceUpdate(className: string) {
   const node = document.querySelector(`.${className}`);
   if (!node) return;
   const stateNode = findInTree(getInternalInstance(node), (m: { getPredicateSections: any; }) => m && m.getPredicateSections, {walkable: ["return", "stateNode"]});
   if (stateNode) stateNode.forceUpdate();
+}
+
+var r, i = Webpack.modules[192379], a = Webpack.modules[610521], s = Webpack.modules[442837], o = Webpack.modules[607070];
+let l = null !== (r = document.getElementById("app-mount")) && void 0 !== r ? r : document;
+function u(e: any) {
+  var t;
+  let n = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
+    , r = (0,
+  s.e7)([o.Z], () => o.Z.keyboardModeEnabled)
+    , u = i.useRef(!1);
+  return u.current = !r,
+  (0,
+  a.ZP)(e, {
+      ...n,
+      disableReturnRef: u,
+      attachTo: null !== (t = n.attachTo) && void 0 !== t ? t : l,
+      returnRef: n.returnRef
+  })
 }
 
 function getInternalInstance(node) {
