@@ -4,6 +4,8 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/websocket": "^1.0.10",
+    "@types/ws": "^8.5.13",
     "bundlebd": "^4.0.0"
   },
   "scripts": {
@@ -14,6 +16,11 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@types/react": "^18.3.12"
+    "@types/react": "^18.3.12",
+    "highlight.js": "^11.10.0",
+    "svelte": "^5.15.0",
+    "svelte-modals": "^2.0.0",
+    "websocket": "^1.0.35",
+    "ws": "^8.18.0"
   }
 }

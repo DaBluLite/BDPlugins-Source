@@ -1,72 +1,9 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { ContextMenu, Data, Webpack as Webpack$1 } from "betterdiscord";
+import { ContextMenu, Data, ReactUtils, Utils, ReactDOM, React } from "betterdiscord";
 import type { ComponentType } from "react";
-import Spinner from "./DiscordColorways/src/components/Spinner";
+import { makeLazy, proxyLazy } from "./lazy";
+import { Webpack } from "./apis";
 
-export type FilterFn = (mod: any) => boolean;
-
-export const Filters = {
-  ...Webpack$1.Filters,
-  byName: (name: any) => {
-    return (target: { displayName: any; constructor: { displayName: any } }) =>
-      (target?.displayName ?? target?.constructor?.displayName) === name;
-  },
-  byKeys: (...keys: any[]) => {
-    return (target: any) =>
-      target instanceof Object && keys.every((key) => key in target);
-  },
-  byProtos: (...protos: any[]) => {
-    return (target: { prototype: any }) =>
-      target instanceof Object &&
-      target.prototype instanceof Object &&
-      protos.every((proto) => proto in target.prototype);
-  },
-  bySource: (...fragments: any[]) => {
-    return (target: {
-      render: any;
-      type: any;
-      toString: () => any;
-      prototype: { render: { toString: () => any } };
-    }) => {
-      while (target instanceof Object && "$$typeof" in target) {
-        target = target.render ?? target.type;
-      }
-      if (target instanceof Function) {
-        const source = target.toString();
-        const renderSource = target.prototype?.render?.toString();
-        return fragments.every((fragment) =>
-          typeof fragment === "string"
-            ? source.includes(fragment) || renderSource?.includes(fragment)
-            : fragment(source) || (renderSource && fragment(renderSource))
-        );
-      } else {
-        return false;
-      }
-    };
-  },
-  byCode:
-    (...code: string[]): FilterFn =>
-    (m) => {
-      if (typeof m !== "function") return false;
-      const s = Function.prototype.toString.call(m);
-      for (const c of code) {
-        if (!s.includes(c)) return false;
-      }
-      return true;
-    },
-  componentByCode: (...code: string[]): FilterFn => {
-    const filter = Filters.byCode(...code);
-    return (m) => {
-      if (filter(m)) return true;
-      if (!m.$$typeof) return false;
-      if (m.type && m.type.render) return filter(m.type.render); // memo + forwardRef
-      if (m.type) return filter(m.type); // memos
-      if (m.render) return filter(m.render); // forwardRefs
-      return false;
-    };
-  },
-};
+const { Filters } = Webpack;
 
 /**
  * Finds the first component that includes all the given code, lazily
@@ -80,160 +17,6 @@ export function findComponentByCodeLazy<T extends object = any>(
     return res;
   });
 }
-
-const hasThrown = new WeakSet();
-
-const wrapFilter =
-  (filter: any) =>
-  (
-    exports: {
-      default: {
-        remove: any;
-        set: any;
-        clear: any;
-        get: any;
-        sort: any;
-        getToken: any;
-        getEmail: any;
-        showToken: any;
-      };
-      remove: any;
-      set: any;
-      clear: any;
-      get: any;
-      sort: any;
-      getToken: any;
-      getEmail: any;
-      showToken: any;
-    },
-    module?: any,
-    moduleId?: any
-  ) => {
-    try {
-      if (
-        exports?.default?.remove &&
-        exports?.default?.set &&
-        exports?.default?.clear &&
-        exports?.default?.get &&
-        !exports?.default?.sort
-      )
-        return false;
-      if (
-        exports.remove &&
-        exports.set &&
-        exports.clear &&
-        exports.get &&
-        !exports.sort
-      )
-        return false;
-      if (
-        exports?.default?.getToken ||
-        exports?.default?.getEmail ||
-        exports?.default?.showToken
-      )
-        return false;
-      if (exports.getToken || exports.getEmail || exports.showToken)
-        return false;
-      return filter(exports, module, moduleId);
-    } catch (err) {
-      if (!hasThrown.has(filter))
-        console.warn(
-          "WebpackModules~getModule",
-          "Module filter threw an exception.",
-          filter,
-          err
-        );
-      hasThrown.add(filter);
-      return false;
-    }
-  };
-
-const listeners = new Set();
-
-function addListener(listener: unknown) {
-  listeners.add(listener);
-  return removeListener.bind(null, listener);
-}
-
-function removeListener(listener: unknown) {
-  return listeners.delete(listener);
-}
-
-export const subscriptions = new Map<FilterFn, CallbackFn>();
-
-export const Webpack = {
-  ...Webpack$1,
-  getLazy: (
-    filter: any,
-    options: {
-      signal?: any;
-      defaultExport?: boolean;
-      searchExports?: boolean;
-    } = {}
-  ) => {
-    const {
-      signal: abortSignal,
-      defaultExport = true,
-      searchExports = false,
-    } = options;
-    const fromCache = Webpack.getModule(filter, {
-      defaultExport,
-      searchExports,
-    });
-    if (fromCache) return Promise.resolve(fromCache);
-
-    const wrappedFilter = wrapFilter(filter);
-
-    return new Promise((resolve) => {
-      const cancel = () => removeListener(listener);
-      const listener = function (exports: any | HTMLElement) {
-        if (
-          !exports ||
-          exports === window ||
-          exports === document.documentElement ||
-          exports[Symbol.toStringTag] === "DOMTokenList"
-        )
-          return;
-
-        let foundModule = null;
-        if (
-          typeof exports === "object" &&
-          searchExports &&
-          !exports.TypedArray
-        ) {
-          for (const key in exports) {
-            foundModule = null;
-            const wrappedExport = exports[key];
-            if (!wrappedExport) continue;
-            if (wrappedFilter(wrappedExport)) foundModule = wrappedExport;
-          }
-        } else {
-          if (exports.Z && wrappedFilter(exports.Z))
-            foundModule = defaultExport ? exports.Z : exports;
-          if (exports.ZP && wrappedFilter(exports.ZP))
-            foundModule = defaultExport ? exports.ZP : exports;
-          if (
-            exports.__esModule &&
-            exports.default &&
-            wrappedFilter(exports.default)
-          )
-            foundModule = defaultExport ? exports.default : exports;
-          if (wrappedFilter(exports)) foundModule = exports;
-        }
-
-        if (!foundModule) return;
-        cancel();
-        resolve(foundModule);
-      };
-
-      addListener(listener);
-      abortSignal?.addEventListener("abort", () => {
-        cancel();
-        resolve(null);
-      });
-    });
-  }
-};
 
 export const ReactDOMInternals =
   (ReactDOM as any)?.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -291,7 +74,7 @@ export const queryTree = (node: any, predicate: any) => {
   return null;
 };
 
-export const getFiber = (node: Element) => getInstanceFromNode(node ?? {});
+export const getFiber = (node: HTMLElement) => ReactUtils.getInternalInstance(node ?? {});
 
 const queryFiber = (
   fiber: { return: any; child: any },
@@ -336,19 +119,6 @@ export const findOwner = (fiber: any, depth = 50) => {
     "up",
     depth
   );
-};
-
-export const ColorwayCSS = {
-  get: () => document.getElementById("activeColorwayCSS")?.textContent || "",
-  set: (e: string) => {
-      if (!document.getElementById("activeColorwayCSS")) {
-          document.head.append(Object.assign(document.createElement("style"), {
-              id: "activeColorwayCSS",
-              textContent: e
-          }));
-      } else (document.getElementById("activeColorwayCSS") as Element).textContent = e;
-  },
-  remove: () => document.getElementById("activeColorwayCSS")?.remove(),
 };
 
 /**
@@ -477,19 +247,6 @@ export function colorToHex(color: string) {
   return color.replace("#", "");
 }
 
-export function makeLazy<T>(factory: () => T, attempts = 5): () => T {
-  let tries = 0;
-  let cache: T;
-  return () => {
-    if (!cache && attempts > tries++) {
-      cache = factory();
-      if (!cache && attempts === tries)
-        console.error("Lazy factory failed:", factory);
-    }
-    return cache;
-  };
-}
-
 const NoopComponent = () => null;
 
 /**
@@ -518,105 +275,15 @@ export function handleModuleNotFound(method: string, ...filter: unknown[]) {
   console.error(err, "Filter:", filter);
 }
 
-const unconfigurable = ["arguments", "caller", "prototype"];
-
-const handler: { [key: string]: any } = {};
-
-const kGET = Symbol.for("vencord.lazy.get");
-const kCACHE = Symbol.for("vencord.lazy.cached");
-
-for (const method of [
-  "apply",
-  "construct",
-  "defineProperty",
-  "deleteProperty",
-  "getOwnPropertyDescriptor",
-  "getPrototypeOf",
-  "has",
-  "isExtensible",
-  "ownKeys",
-  "preventExtensions",
-  "set",
-  "setPrototypeOf",
-]) {
-  handler[method] = (target: any, ...args: any[]) =>
-    (Reflect as { [key: string]: any })[method](target[kGET](), ...args);
-}
-
-handler.ownKeys = (target: any) => {
-  const v = target[kGET]();
-  const keys = Reflect.ownKeys(v);
-  for (const key of unconfigurable) {
-    if (!keys.includes(key)) keys.push(key);
-  }
-  return keys;
-};
-
-handler.getOwnPropertyDescriptor = (target: any, p: any) => {
-  if (typeof p === "string" && unconfigurable.includes(p))
-    return Reflect.getOwnPropertyDescriptor(target, p);
-
-  const descriptor = Reflect.getOwnPropertyDescriptor(target[kGET](), p);
-
-  if (descriptor) Object.defineProperty(target, p, descriptor);
-  return descriptor;
-};
-
-export function proxyLazy<T>(
-  factory: () => T,
-  attempts = 5,
-  isChild = false
-): T {
-  let isSameTick = true;
-  if (!isChild) setTimeout(() => (isSameTick = false), 0);
-
-  let tries = 0;
-  const proxyDummy = Object.assign(function () {}, {
-    [kCACHE]: void 0 as T | undefined,
-    [kGET]() {
-      if (!proxyDummy[kCACHE] && attempts > tries++) {
-        proxyDummy[kCACHE] = factory();
-        if (!proxyDummy[kCACHE] && attempts === tries)
-          console.error("Lazy factory failed:", factory);
-      }
-      return proxyDummy[kCACHE];
-    },
-  });
-
-  return new Proxy(proxyDummy, {
-    ...handler,
-    get(target: any, p, receiver) {
-      if (!isChild && isSameTick)
-        return proxyLazy(
-          () => Reflect.get(target[kGET](), p, receiver),
-          attempts,
-          true
-        );
-      const lazyTarget = target[kGET]();
-      if (typeof lazyTarget === "object" || typeof lazyTarget === "function") {
-        return Reflect.get(lazyTarget, p, receiver);
-      }
-      throw new Error("proxyLazy called on a primitive value");
-    },
-  }) as any;
-}
-
 export function findExportedComponentLazy<T extends object = any>(
   ...props: string[]
 ) {
   return LazyComponent<T>(() => {
-    const res = Webpack.getModule(Filters.byProps(...props));
+    const res = Webpack.getModule(Filters.byKeys(...props));
     if (!res) handleModuleNotFound("findExportedComponent", ...props);
     return res[props[0]];
   });
 }
-
-export const {
-  radioBar,
-  item: radioBarItem,
-  itemFilled: radioBarItemFilled,
-  radioPositionLeft,
-} = Webpack.getByKeys("radioBar");
 
 /**
  * React hook that returns stateful data for one or more stores
@@ -668,11 +335,41 @@ export let Clickable: Clickable;
 export let Avatar: Avatar;
 export let FocusLock: FocusLock;
 export let useToken: useToken;
+export let CustomColorPicker;
 export const SettingsRouter = Webpack.getByKeys("open", "saveAccountChanges");
 export const Menu: Menu = { ...Webpack.getByKeys("MenuItem", "MenuSliderControl") };
-export let ColorPicker: React.FunctionComponent<ColorPickerProps> = () => {
-  return <Spinner className="colorways-creator-module-warning" />;
+export const Toasts = {
+  ...{} as {
+    show(data: ToastData): void;
+    pop(): void;
+    create(message: string, type: number, options?: ToastOptions): ToastData;
+  }
 };
+
+export interface ToastData {
+  message: string,
+  id: string,
+  /**
+   * Toasts.Type
+   */
+  type: number,
+  options?: ToastOptions;
+}
+
+export interface ToastOptions {
+  /**
+   * Toasts.Position
+   */
+  position?: number;
+  component?: React.ReactNode,
+  duration?: number;
+}
+
+Webpack.waitForModule(Filters.byKeys("showToast")).then(m => {
+  Toasts.show = m.showToast;
+  Toasts.pop = m.popToast;
+  Toasts.create = m.createToast;
+});
 
 Webpack.waitForModule(Filters.byKeys("FormItem", "Button")).then((m) => {
   ({
@@ -696,35 +393,18 @@ Webpack.waitForModule(Filters.byKeys("FormItem", "Button")).then((m) => {
     Clickable,
     Avatar,
     FocusLock,
+    CustomColorPicker
   } = m);
   Forms = m;
 });
-Webpack.waitForModule(Filters.byStrings("showEyeDropper")).then(
-  (e) => (ColorPicker = e)
-);
 
-export function Flex(
-  props: React.PropsWithChildren<
-    {
-      flexDirection?: React.CSSProperties["flexDirection"];
-      style?: React.CSSProperties;
-      className?: string;
-    } & React.HTMLProps<HTMLDivElement>
-  >
-) {
-  props.style ??= {};
-  props.style.display = "flex";
-  props.style.gap ??= "1em";
-  props.style.flexDirection ||= props.flexDirection;
-  delete props.flexDirection;
-  return <div {...props}>{props.children}</div>;
-}
 export let PermissionStore: GenericStore;
 export let GuildChannelStore: GenericStore;
 export let ReadStateStore: GenericStore;
 export let PresenceStore: GenericStore;
 export let GuildStore: GuildStore;
 export let UserStore: UserStore & FluxStore;
+export let ThemeStore: ThemeStore;
 export let UserProfileStore: GenericStore;
 export let SelectedChannelStore: SelectedChannelStore & FluxStore;
 export let SelectedGuildStore: FluxStore & Record<string, any>;
@@ -749,78 +429,6 @@ export const UserUtils = proxyLazy(
       getUser: (id: string) => Promise<User>;
     }
 );
-
-const enum ModalSize {
-  SMALL = "small",
-  MEDIUM = "medium",
-  LARGE = "large",
-  DYNAMIC = "dynamic",
-}
-
-export const Modals = proxyLazy(() => Webpack.getByKeys("ModalRoot", "ModalCloseButton")) as {
-  ModalRoot: ComponentType<PropsWithChildren<{
-      transitionState: ModalTransitionState;
-      size?: ModalSize | "small" | "medium" | "large" | "dynamic";
-      role?: "alertdialog" | "dialog";
-      className?: string;
-      fullscreenOnMobile?: boolean;
-      "aria-label"?: string;
-      "aria-labelledby"?: string;
-      onAnimationEnd?(): string;
-  }>>;
-  ModalHeader: ComponentType<PropsWithChildren<{
-      /** Flex.Justify.START */
-      justify?: string;
-      /** Flex.Direction.HORIZONTAL */
-      direction?: string;
-      /** Flex.Align.CENTER */
-      align?: string;
-      /** Flex.Wrap.NO_WRAP */
-      wrap?: string;
-      separator?: boolean;
-
-      className?: string;
-  }>>;
-  /** This also accepts Scroller props but good luck with that */
-  ModalContent: ComponentType<PropsWithChildren<{
-      className?: string;
-      scrollerRef?: Ref<HTMLElement>;
-      [prop: string]: any;
-  }>>;
-  ModalFooter: ComponentType<PropsWithChildren<{
-      /** Flex.Justify.START */
-      justify?: string;
-      /** Flex.Direction.HORIZONTAL_REVERSE */
-      direction?: string;
-      /** Flex.Align.STRETCH */
-      align?: string;
-      /** Flex.Wrap.NO_WRAP */
-      wrap?: string;
-      separator?: boolean;
-
-      className?: string;
-  }>>;
-  ModalCloseButton: ComponentType<{
-      focusProps?: any;
-      onClick(): void;
-      withCircleBackground?: boolean;
-      hideOnFullscreen?: boolean;
-      className?: string;
-  }>;
-};
-
-export const ModalRoot = LazyComponent(() => Modals.ModalRoot);
-export const ModalHeader = LazyComponent(() => Modals.ModalHeader);
-export const ModalContent = LazyComponent(() => Modals.ModalContent);
-export const ModalFooter = LazyComponent(() => Modals.ModalFooter);
-export const ModalCloseButton = LazyComponent(() => Modals.ModalCloseButton);
-
-export const Toasts = {
-  show: Webpack.getByKeys("showToast")["showToast"],
-  pop: Webpack.getByKeys("popToast")["popToast"],
-  useToastStore: Webpack.getByKeys("useToastStore")["useToastStore"],
-  create: Webpack.getByKeys("createToast")["createToast"],
-};
 
 export const FluxDispatcher = Webpack.getModule(
   (m: { dispatch: any; subscribe: any }) => m.dispatch && m.subscribe
@@ -850,6 +458,7 @@ export function waitForStore(storeName: string, callback: any) {
 
 waitForStore("DraftStore", (s: DraftStore) => (DraftStore = s));
 waitForStore("UserStore", (s: UserStore & FluxStore) => (UserStore = s));
+waitForStore("ThemeStore", (s: ThemeStore) => (ThemeStore = s));
 waitForStore(
   "SelectedChannelStore",
   (s: SelectedChannelStore & FluxStore) => (SelectedChannelStore = s)
@@ -928,7 +537,7 @@ export function chooseFile(mimeTypes: string) {
 
     document.body.appendChild(input);
     input.click();
-    setImmediate(() => document.body.removeChild(input));
+    document.body.removeChild(input);
   });
 }
 
@@ -953,7 +562,7 @@ export function Link(props: React.PropsWithChildren<Props>) {
   );
 }
 
-const ModalAPI = proxyLazy(() => Webpack.getByKeys("openModalLazy"));
+export const ModalAPI = proxyLazy(() => Webpack.getByKeys("openModalLazy"));
 
 /**
  * Wait for the render promise to resolve, then open a modal with it.
@@ -961,7 +570,7 @@ const ModalAPI = proxyLazy(() => Webpack.getByKeys("openModalLazy"));
  * You should use the Modal components exported by this file
  */
 export function openModalLazy(render: () => Promise<RenderFunction>, options?: ModalOptions & { contextKey?: string; }): Promise<string> {
-    return ModalAPI.openModalLazy(render, options);
+  return ModalAPI.openModalLazy(render, options);
 }
 
 /**
@@ -969,21 +578,21 @@ export function openModalLazy(render: () => Promise<RenderFunction>, options?: M
  * You should use the Modal components exported by this file
  */
 export function openModal(render: RenderFunction, options?: ModalOptions, contextKey?: string): string {
-    return ModalAPI.openModal(render, options, contextKey);
+  return ModalAPI.openModal(render, options, contextKey);
 }
 
 /**
  * Close a modal by its key
  */
 export function closeModal(modalKey: string, contextKey?: string): void {
-    return ModalAPI.closeModal(modalKey, contextKey);
+  return ModalAPI.closeModal(modalKey, contextKey);
 }
 
 /**
  * Close all open modals
  */
 export function closeAllModals(): void {
-    return ModalAPI.closeAllModals();
+  return ModalAPI.closeAllModals();
 }
 
 export let Parser: Parser;
@@ -1022,59 +631,10 @@ export const ContextMenuApi = {
 };
 
 export function forceUpdate(className: string) {
-  const node = document.querySelector(`.${className}`);
+  const node = document.querySelector(`.${className}`) as HTMLElement | null;
   if (!node) return;
-  const stateNode = findInTree(getInternalInstance(node), (m: { getPredicateSections: any; }) => m && m.getPredicateSections, {walkable: ["return", "stateNode"]});
+  const stateNode = Utils.findInTree(ReactUtils.getInternalInstance(node), (m: { getPredicateSections: any; }) => m && m.getPredicateSections, { walkable: ["return", "stateNode"] });
   if (stateNode) stateNode.forceUpdate();
 }
 
-var r, i = Webpack.modules[192379], a = Webpack.modules[610521], s = Webpack.modules[442837], o = Webpack.modules[607070];
-let l = null !== (r = document.getElementById("app-mount")) && void 0 !== r ? r : document;
-function u(e: any) {
-  var t;
-  let n = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : {}
-    , r = (0,
-  s.e7)([o.Z], () => o.Z.keyboardModeEnabled)
-    , u = i.useRef(!1);
-  return u.current = !r,
-  (0,
-  a.ZP)(e, {
-      ...n,
-      disableReturnRef: u,
-      attachTo: null !== (t = n.attachTo) && void 0 !== t ? t : l,
-      returnRef: n.returnRef
-  })
-}
-
-function getInternalInstance(node) {
-  if (node.__reactFiber$) return node.__reactFiber$;
-  return node[Object.keys(node).find(k => k.startsWith("__reactInternalInstance") || k.startsWith("__reactFiber"))] || null;
-}
-
-function findInTree(tree: { [x: string]: any; hasOwnProperty?: any; } | null, searchFilter: string | number, {walkable = null, ignore = []} = {}) {
-  if (typeof searchFilter === "string") {
-      if (tree.hasOwnProperty(searchFilter)) return tree[searchFilter];
-  }
-  else if (searchFilter(tree)) {
-      return tree;
-  }
-
-  if (typeof tree !== "object" || tree == null) return undefined;
-
-  let tempReturn;
-  if (tree instanceof Array) {
-      for (const value of tree) {
-          tempReturn = findInTree(value, searchFilter, {walkable, ignore});
-          if (typeof tempReturn != "undefined") return tempReturn;
-      }
-  }
-  else {
-      const toWalk = walkable == null ? Object.keys(tree) : walkable;
-      for (const key of toWalk) {
-          if (typeof(tree[key]) == "undefined" || ignore.includes(key)) continue;
-          tempReturn = findInTree(tree[key], searchFilter, {walkable, ignore});
-          if (typeof tempReturn != "undefined") return tempReturn;
-      }
-  }
-  return tempReturn;
-}
+export const hljs: typeof import("highlight.js") = Webpack.getByKeysLazy("highlight", "registerLanguage")

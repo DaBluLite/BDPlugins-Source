@@ -1,8 +1,7 @@
-import { DOM, Data, Patcher, Webpack } from "betterdiscord";
+import { DOM, Data, Patcher, ReactDOM, ReactUtils, Utils, Webpack } from "betterdiscord";
 import { FluxDispatcher, GuildStore, SelectedGuildStore, Switch } from "./common";
-import { findOwner, getFiber } from "../../common";
+import { getFiber } from "../../common";
 import { useState } from "react";
-import ReactDOM from "react-dom";
 
 const { app: AppClass } = Webpack.getByKeys("app", "layers");
 
@@ -117,7 +116,7 @@ const gradientBase = `@import url(//dablulite.github.io/css-snippets/NitroThemes
 }`
 
 const forceFullRerender = (fiber: any) => new Promise((resolve) => {
-    const owner = findOwner(fiber);
+    const owner = ReactDOM.findOwner(fiber);
     if (owner) {
         const { stateNode } = owner;
         instead(stateNode, "render", () => null, { once: true, silent: true });
